@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite tests="7" failures="0" name="hellocucumber.RunCucumberTest" time="0.256" errors="4" skipped="0">
+  <properties>
+    <property name="java.runtime.name" value="Java(TM) SE Runtime Environment"/>
+    <property name="sun.boot.library.path" value="/Library/Java/JavaVirtualMachines/jdk1.8.0_172.jdk/Contents/Home/jre/lib"/>
+    <property name="java.vm.version" value="25.172-b11"/>
+    <property name="gopherProxySet" value="false"/>
+    <property name="java.vm.vendor" value="Oracle Corporation"/>
+    <property name="maven.multiModuleProjectDirectory" value="/Users/christiant/IdeaProjects/ImdbProject/hellocucumber"/>
+    <property name="java.vendor.url" value="http://java.oracle.com/"/>
+    <property name="path.separator" value=":"/>
+    <property name="guice.disable.misplaced.annotation.check" value="true"/>
+    <property name="java.vm.name" value="Java HotSpot(TM) 64-Bit Server VM"/>
+    <property name="file.encoding.pkg" value="sun.io"/>
+    <property name="user.country" value="US"/>
+    <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="sun.os.patch.level" value="unknown"/>
+    <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+    <property name="user.dir" value="/Users/christiant/IdeaProjects/ImdbProject/hellocucumber"/>
+    <property name="java.runtime.version" value="1.8.0_172-b11"/>
+    <property name="java.awt.graphicsenv" value="sun.awt.CGraphicsEnvironment"/>
+    <property name="java.endorsed.dirs" value="/Library/Java/JavaVirtualMachines/jdk1.8.0_172.jdk/Contents/Home/jre/lib/endorsed"/>
+    <property name="os.arch" value="x86_64"/>
+    <property name="java.io.tmpdir" value="/var/folders/lm/36r6gtmn66q50std7k9h7s4w0000gn/T/"/>
+    <property name="line.separator" value="
+"/>
+    <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+    <property name="os.name" value="Mac OS X"/>
+    <property name="classworlds.conf" value="/Users/christiant/tools/apache-maven-3.5.2/bin/m2.conf"/>
+    <property name="sun.jnu.encoding" value="UTF-8"/>
+    <property name="java.library.path" value="/Users/christiant/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:."/>
+    <property name="maven.conf" value="/Users/christiant/tools/apache-maven-3.5.2/conf"/>
+    <property name="java.specification.name" value="Java Platform API Specification"/>
+    <property name="java.class.version" value="52.0"/>
+    <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
+    <property name="os.version" value="10.13.6"/>
+    <property name="library.jansi.path" value="/Users/christiant/tools/apache-maven-3.5.2/lib/jansi-native"/>
+    <property name="http.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
+    <property name="user.home" value="/Users/christiant"/>
+    <property name="user.timezone" value="America/Los_Angeles"/>
+    <property name="java.awt.printerjob" value="sun.lwawt.macosx.CPrinterJob"/>
+    <property name="java.specification.version" value="1.8"/>
+    <property name="file.encoding" value="UTF-8"/>
+    <property name="user.name" value="christiant"/>
+    <property name="java.class.path" value="/Users/christiant/tools/apache-maven-3.5.2/boot/plexus-classworlds-2.5.2.jar"/>
+    <property name="java.vm.specification.version" value="1.8"/>
+    <property name="sun.arch.data.model" value="64"/>
+    <property name="java.home" value="/Library/Java/JavaVirtualMachines/jdk1.8.0_172.jdk/Contents/Home/jre"/>
+    <property name="sun.java.command" value="org.codehaus.plexus.classworlds.launcher.Launcher test"/>
+    <property name="java.specification.vendor" value="Oracle Corporation"/>
+    <property name="user.language" value="en"/>
+    <property name="awt.toolkit" value="sun.lwawt.macosx.LWCToolkit"/>
+    <property name="java.vm.info" value="mixed mode"/>
+    <property name="java.version" value="1.8.0_172"/>
+    <property name="java.ext.dirs" value="/Users/christiant/Library/Java/Extensions:/Library/Java/JavaVirtualMachines/jdk1.8.0_172.jdk/Contents/Home/jre/lib/ext:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java"/>
+    <property name="sun.boot.class.path" value="/Library/Java/JavaVirtualMachines/jdk1.8.0_172.jdk/Contents/Home/jre/lib/resources.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_172.jdk/Contents/Home/jre/lib/rt.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_172.jdk/Contents/Home/jre/lib/sunrsasign.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_172.jdk/Contents/Home/jre/lib/jsse.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_172.jdk/Contents/Home/jre/lib/jce.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_172.jdk/Contents/Home/jre/lib/charsets.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_172.jdk/Contents/Home/jre/lib/jfr.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_172.jdk/Contents/Home/jre/classes"/>
+    <property name="java.vendor" value="Oracle Corporation"/>
+    <property name="maven.home" value="/Users/christiant/tools/apache-maven-3.5.2"/>
+    <property name="file.separator" value="/"/>
+    <property name="java.vendor.url.bug" value="http://bugreport.sun.com/bugreport/"/>
+    <property name="sun.cpu.endian" value="little"/>
+    <property name="sun.io.unicode.encoding" value="UnicodeBig"/>
+    <property name="socksNonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
+    <property name="ftp.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
+    <property name="sun.cpu.isalist" value=""/>
+  </properties>
+  <testcase classname="Is it Friday yet?" name="Today is or is not Friday" time="0.206"/>
+  <testcase classname="Is it Friday yet?" name="Today is or is not Friday" time="0.002"/>
+  <testcase classname="Is it Friday yet?" name="Today is or is not Friday" time="0.002"/>
+  <testcase classname="Top Rated Movies" name="Refining Movies List by Genre" time="0.014">
+    <error message="Arity mismatch: Step Definition &apos;hellocucumber.Stepdefs.i_load_the_Top_Rated_Movies_page(String) in file:/Users/christiant/IdeaProjects/ImdbProject/hellocucumber/target/test-classes/&apos; with pattern [^I load the Top Rated Movies page$] is declared with 1 parameters. However, the gherkin step has 0 arguments []. 
+Step text: I load the Top Rated Movies page" type="cucumber.runtime.CucumberException">cucumber.runtime.CucumberException: Arity mismatch: Step Definition &apos;hellocucumber.Stepdefs.i_load_the_Top_Rated_Movies_page(String) in file:/Users/christiant/IdeaProjects/ImdbProject/hellocucumber/target/test-classes/&apos; with pattern [^I load the Top Rated Movies page$] is declared with 1 parameters. However, the gherkin step has 0 arguments []. 
+Step text: I load the Top Rated Movies page
+	at cucumber.runtime.StepDefinitionMatch.arityMismatch(StepDefinitionMatch.java:111)
+	at cucumber.runtime.StepDefinitionMatch.transformedArgs(StepDefinitionMatch.java:66)
+	at cucumber.runtime.StepDefinitionMatch.runStep(StepDefinitionMatch.java:40)
+	at cucumber.api.TestStep.executeStep(TestStep.java:102)
+	at cucumber.api.TestStep.run(TestStep.java:83)
+	at cucumber.api.TestCase.run(TestCase.java:58)
+	at cucumber.runner.Runner.runPickle(Runner.java:80)
+	at cucumber.runtime.junit.PickleRunners$NoStepDescriptions.run(PickleRunners.java:140)
+	at cucumber.runtime.junit.FeatureRunner.runChild(FeatureRunner.java:68)
+	at cucumber.runtime.junit.FeatureRunner.runChild(FeatureRunner.java:23)
+	at org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)
+	at org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:363)
+	at cucumber.runtime.junit.FeatureRunner.run(FeatureRunner.java:73)
+	at cucumber.api.junit.Cucumber.runChild(Cucumber.java:117)
+	at cucumber.api.junit.Cucumber.runChild(Cucumber.java:55)
+	at org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)
+	at org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)
+	at cucumber.api.junit.Cucumber$1.evaluate(Cucumber.java:126)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:363)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.execute(JUnit4Provider.java:252)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeTestSet(JUnit4Provider.java:141)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.invoke(JUnit4Provider.java:112)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.apache.maven.surefire.util.ReflectionUtils.invokeMethodWithArray(ReflectionUtils.java:189)
+	at org.apache.maven.surefire.booter.ProviderFactory$ProviderProxy.invoke(ProviderFactory.java:165)
+	at org.apache.maven.surefire.booter.ProviderFactory.invokeProvider(ProviderFactory.java:85)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:115)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:75)
+</error>
+    <system-out>
+Feature: Top Rated Movies
+  The &quot;Top Rated Movies&quot; page displays a list of theatrical films
+  which have received the highest ratings on IMDB. This feature
+  file describes the behavior of the top rated films
+  page: http://www.imdb.com/chart/top
+
+  Scenario: Refining Movies List by Genre                        &amp;#27;[90m# hellocucumber/top_rated_movies.feature:8&amp;#27;[0m
+  On the Top Rated Movies page the user is capable of refining the list of titles based on a
+  particular genre.
+    &amp;#27;[31mGiven &amp;#27;[0m&amp;#27;[31mI load the Top Rated Movies page&amp;#27;[0m                       &amp;#27;[90m# Stepdefs.i_load_the_Top_Rated_Movies_page(String)&amp;#27;[0m
+      &amp;#27;[31mcucumber.runtime.CucumberException: Arity mismatch: Step Definition &apos;hellocucumber.Stepdefs.i_load_the_Top_Rated_Movies_page(String) in file:/Users/christiant/IdeaProjects/ImdbProject/hellocucumber/target/test-classes/&apos; with pattern [^I load the Top Rated Movies page$] is declared with 1 parameters. However, the gherkin step has 0 arguments []. 
+Step text: I load the Top Rated Movies page
+	at cucumber.runtime.StepDefinitionMatch.arityMismatch(StepDefinitionMatch.java:111)
+	at cucumber.runtime.StepDefinitionMatch.transformedArgs(StepDefinitionMatch.java:66)
+	at cucumber.runtime.StepDefinitionMatch.runStep(StepDefinitionMatch.java:40)
+	at cucumber.api.TestStep.executeStep(TestStep.java:102)
+	at cucumber.api.TestStep.run(TestStep.java:83)
+	at cucumber.api.TestCase.run(TestCase.java:58)
+	at cucumber.runner.Runner.runPickle(Runner.java:80)
+	at cucumber.runtime.junit.PickleRunners$NoStepDescriptions.run(PickleRunners.java:140)
+	at cucumber.runtime.junit.FeatureRunner.runChild(FeatureRunner.java:68)
+	at cucumber.runtime.junit.FeatureRunner.runChild(FeatureRunner.java:23)
+	at org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)
+	at org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:363)
+	at cucumber.runtime.junit.FeatureRunner.run(FeatureRunner.java:73)
+	at cucumber.api.junit.Cucumber.runChild(Cucumber.java:117)
+	at cucumber.api.junit.Cucumber.runChild(Cucumber.java:55)
+	at org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)
+	at org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)
+	at cucumber.api.junit.Cucumber$1.evaluate(Cucumber.java:126)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:363)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.execute(JUnit4Provider.java:252)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeTestSet(JUnit4Provider.java:141)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.invoke(JUnit4Provider.java:112)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.apache.maven.surefire.util.ReflectionUtils.invokeMethodWithArray(ReflectionUtils.java:189)
+	at org.apache.maven.surefire.booter.ProviderFactory$ProviderProxy.invoke(ProviderFactory.java:165)
+	at org.apache.maven.surefire.booter.ProviderFactory.invokeProvider(ProviderFactory.java:85)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:115)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:75)
+&amp;#27;[0m
+    &amp;#27;[36mAnd &amp;#27;[0m&amp;#27;[36mI refine by Genre &quot;Comedy&quot;&amp;#27;[0m                               &amp;#27;[90m# Stepdefs.i_refine_by_Genre(String)&amp;#27;[0m
+    &amp;#27;[36mThen &amp;#27;[0m&amp;#27;[36mthe list of movies should only contain relevant results&amp;#27;[0m &amp;#27;[90m# Stepdefs.the_list_of_movies_should_only_contain_relevant_results(String)&amp;#27;[0m
+</system-out>
+  </testcase>
+  <testcase classname="Top Rated Movies" name="Sorting Movies List (by Release Date)" time="0.01">
+    <error message="Arity mismatch: Step Definition &apos;hellocucumber.Stepdefs.i_load_the_Top_Rated_Movies_page(String) in file:/Users/christiant/IdeaProjects/ImdbProject/hellocucumber/target/test-classes/&apos; with pattern [^I load the Top Rated Movies page$] is declared with 1 parameters. However, the gherkin step has 0 arguments []. 
+Step text: I load the Top Rated Movies page" type="cucumber.runtime.CucumberException">cucumber.runtime.CucumberException: Arity mismatch: Step Definition &apos;hellocucumber.Stepdefs.i_load_the_Top_Rated_Movies_page(String) in file:/Users/christiant/IdeaProjects/ImdbProject/hellocucumber/target/test-classes/&apos; with pattern [^I load the Top Rated Movies page$] is declared with 1 parameters. However, the gherkin step has 0 arguments []. 
+Step text: I load the Top Rated Movies page
+	at cucumber.runtime.StepDefinitionMatch.arityMismatch(StepDefinitionMatch.java:111)
+	at cucumber.runtime.StepDefinitionMatch.transformedArgs(StepDefinitionMatch.java:66)
+	at cucumber.runtime.StepDefinitionMatch.runStep(StepDefinitionMatch.java:40)
+	at cucumber.api.TestStep.executeStep(TestStep.java:102)
+	at cucumber.api.TestStep.run(TestStep.java:83)
+	at cucumber.api.TestCase.run(TestCase.java:58)
+	at cucumber.runner.Runner.runPickle(Runner.java:80)
+	at cucumber.runtime.junit.PickleRunners$NoStepDescriptions.run(PickleRunners.java:140)
+	at cucumber.runtime.junit.FeatureRunner.runChild(FeatureRunner.java:68)
+	at cucumber.runtime.junit.FeatureRunner.runChild(FeatureRunner.java:23)
+	at org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)
+	at org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:363)
+	at cucumber.runtime.junit.FeatureRunner.run(FeatureRunner.java:73)
+	at cucumber.api.junit.Cucumber.runChild(Cucumber.java:117)
+	at cucumber.api.junit.Cucumber.runChild(Cucumber.java:55)
+	at org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)
+	at org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)
+	at cucumber.api.junit.Cucumber$1.evaluate(Cucumber.java:126)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:363)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.execute(JUnit4Provider.java:252)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeTestSet(JUnit4Provider.java:141)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.invoke(JUnit4Provider.java:112)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.apache.maven.surefire.util.ReflectionUtils.invokeMethodWithArray(ReflectionUtils.java:189)
+	at org.apache.maven.surefire.booter.ProviderFactory$ProviderProxy.invoke(ProviderFactory.java:165)
+	at org.apache.maven.surefire.booter.ProviderFactory.invokeProvider(ProviderFactory.java:85)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:115)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:75)
+</error>
+    <system-out>
+  Scenario: Sorting Movies List (by Release Date)                        &amp;#27;[90m# hellocucumber/top_rated_movies.feature:18&amp;#27;[0m
+    The user is able to change the ordering of the list of titles based on the year in which the movie
+    was released.
+    &amp;#27;[31mGiven &amp;#27;[0m&amp;#27;[31mI load the Top Rated Movies page&amp;#27;[0m                               &amp;#27;[90m# Stepdefs.i_load_the_Top_Rated_Movies_page(String)&amp;#27;[0m
+      &amp;#27;[31mcucumber.runtime.CucumberException: Arity mismatch: Step Definition &apos;hellocucumber.Stepdefs.i_load_the_Top_Rated_Movies_page(String) in file:/Users/christiant/IdeaProjects/ImdbProject/hellocucumber/target/test-classes/&apos; with pattern [^I load the Top Rated Movies page$] is declared with 1 parameters. However, the gherkin step has 0 arguments []. 
+Step text: I load the Top Rated Movies page
+	at cucumber.runtime.StepDefinitionMatch.arityMismatch(StepDefinitionMatch.java:111)
+	at cucumber.runtime.StepDefinitionMatch.transformedArgs(StepDefinitionMatch.java:66)
+	at cucumber.runtime.StepDefinitionMatch.runStep(StepDefinitionMatch.java:40)
+	at cucumber.api.TestStep.executeStep(TestStep.java:102)
+	at cucumber.api.TestStep.run(TestStep.java:83)
+	at cucumber.api.TestCase.run(TestCase.java:58)
+	at cucumber.runner.Runner.runPickle(Runner.java:80)
+	at cucumber.runtime.junit.PickleRunners$NoStepDescriptions.run(PickleRunners.java:140)
+	at cucumber.runtime.junit.FeatureRunner.runChild(FeatureRunner.java:68)
+	at cucumber.runtime.junit.FeatureRunner.runChild(FeatureRunner.java:23)
+	at org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)
+	at org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:363)
+	at cucumber.runtime.junit.FeatureRunner.run(FeatureRunner.java:73)
+	at cucumber.api.junit.Cucumber.runChild(Cucumber.java:117)
+	at cucumber.api.junit.Cucumber.runChild(Cucumber.java:55)
+	at org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)
+	at org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)
+	at cucumber.api.junit.Cucumber$1.evaluate(Cucumber.java:126)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:363)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.execute(JUnit4Provider.java:252)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeTestSet(JUnit4Provider.java:141)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.invoke(JUnit4Provider.java:112)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.apache.maven.surefire.util.ReflectionUtils.invokeMethodWithArray(ReflectionUtils.java:189)
+	at org.apache.maven.surefire.booter.ProviderFactory$ProviderProxy.invoke(ProviderFactory.java:165)
+	at org.apache.maven.surefire.booter.ProviderFactory.invokeProvider(ProviderFactory.java:85)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:115)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:75)
+&amp;#27;[0m
+    &amp;#27;[33mAnd &amp;#27;[0m&amp;#27;[33mI sort the list by &quot;Release Date&quot;&amp;#27;[0m                                &amp;#27;[90m# null&amp;#27;[0m
+    &amp;#27;[33mThen &amp;#27;[0m&amp;#27;[33mthe list of movies should be displayed in order of release date&amp;#27;[0m &amp;#27;[90m# null&amp;#27;[0m
+</system-out>
+  </testcase>
+  <testcase classname="Top Rated Movies" name="Sorting Movies List (by Release Date)" time="0.011">
+    <error message="The step &quot;I sort the list by &quot;Release Date&quot;&quot; is undefined" type="cucumber.runtime.junit.UndefinedThrowable">cucumber.runtime.junit.UndefinedThrowable: The step &quot;I sort the list by &quot;Release Date&quot;&quot; is undefined
+</error>
+  </testcase>
+  <testcase classname="Top Rated Movies" name="Sorting Movies List (by Release Date)" time="0.011">
+    <error message="The step &quot;the list of movies should be displayed in order of release date&quot; is undefined" type="cucumber.runtime.junit.UndefinedThrowable">cucumber.runtime.junit.UndefinedThrowable: The step &quot;the list of movies should be displayed in order of release date&quot; is undefined
+</error>
+  </testcase>
+</testsuite>

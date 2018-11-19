@@ -58,7 +58,8 @@ public class ImdbStepdefs {
         System.out.println("[ ==> Step 3: Verified results - Expected: <" + expectedFirstMovie + ">  ..and found: <" + actualFirstMovie + ">");
         System.out.println();
         testContext.getWebDriverManager().closeDriver();
-
     }
+
+
 
 }

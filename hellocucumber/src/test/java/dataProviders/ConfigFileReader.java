@@ -11,7 +11,7 @@ import enums.EnvironmentType;
 
 public class ConfigFileReader {
     private Properties properties;
-    private final String propertyFilePath= "/Users/christiant/IdeaProjects/ImdbProject/hellocucumber/src/test/resources/configuration.properties";
+    private final String propertyFilePath= "../hellocucumber/src/test/resources/configuration.properties";
 
     public ConfigFileReader(){
         BufferedReader reader;

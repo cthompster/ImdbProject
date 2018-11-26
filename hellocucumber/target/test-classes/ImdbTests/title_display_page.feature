@@ -16,41 +16,90 @@ Feature: Title Display Page
 
 
   Scenario: Create a new IMDB account
-    Create a new IMDB aaccount
 
-    Given I load the new "<accountType>" account page
-    And I Click on the "<createButton>"
-    And I enter "<name>"
-    And I enter "<email>"
-    And I enter "<password>"
-    And I enter "<passwordConfirm>"
-    And I click on the "<continueButton>"
-    Then my new IMDB account is created
-
-    Examples:
-    | accountType | createButton |  name | email | password | passwordConfirm | continueButton |
-    | imdb        | create a new account | Joe Day | joeday@test.com | tester1234! | tester1234! | create your IMDB account |
-
-
-
-  Scenario: Login with a Existing account
-    Complete Login with an existing IMDB account
+  Create a new IMDB account and add movie to Watchlist
 
     Given I load the "Title Display page"
     And I am not logged in
+    And I add a movie to my watchlist
+    And I am taken to the "Sign In" page
+    And I load the new "IMDB Account" page
+    And I Click on the "<createButton>"
+    And I enter "Full Name"
+    And I enter "Email"
+    And I enter "Password"
+    And I enter "Password Confirm"
+    And I click on the "Continue Button"
+    Then my new IMDB account is created and "Movie" is added to "My Watchlist"
+
+
+  Scenario: Login with a Existing account
+
+  Complete Login with an existing IMDB account and add movie to Watchlist
+
+    Given I load the "Title Display page"
+    And I am not logged in
+    And I add a movie to my watchlist
+    And I am taken to the "Sign In" page
+    And I click on the "Sign In with IMDB" button
+    And I enter my "Email"
+    And I enter my "Password"
+    And Click on the "Sign In" button
+    Then I am successfully logged in, movie is added to "My Watchlist"
 
 
   Scenario: Login with Amazon account
-    Complete the Login using an Amazon Test account
+
+  Complete the Login using an Amazon Test account and add movie to Watchlist
+
+    Given I load the "Title Display page"
+    And I am not logged in
+    And I add a movie to my watchlist
+    And I am taken to the "Sign In" page
+    And I click on the "Sign In with Amazon account" button
+    And I enter my "Email"
+    And I enter my "Password"
+    And Click on the "Sign In" button
+    Then I am successfully logged in, movie is added to "My Watchlist"
+
 
   Scenario: Login with Facebook account
-    Complete the Login using a Facebook test account
+
+  Complete the Login using a Facebook test account and add movie to Watchlist
+
+    Given I load the "Title Display page"
+    And I am not logged in
+    And I add a movie to my watchlist
+    And I am taken to the "Sign In" page
+    And I click on the "Sign In with Facebook account" button
+    And I enter my "Email"
+    And I enter my "Password"
+    And Click on the "Sign In" button
+    Then I am successfully logged in, movie is added to "My Watchlist"
+
 
   Scenario: Login with Google Account
-    Complete the IMDB login using a Google Test account
+
+  Complete the IMDB login using a Google Test account and add movie to Watchlist
+
+    Given I load the "Title Display page"
+    And I am not logged in
+    And I add a movie to my watchlist
+    And I am taken to the "Sign In" page
+    And I click on the "Sign In with Google account" button
+    And I enter my "Email"
+    And I click the "Next" button
+    And I enter my "Password"
+    And I clcik the "Next" button
+    And I enter the "2-Step Verification code"
+    And Click on the "Next" button
+    And click on the "Create Your IMDB account" button
+    Then IMDB account is created and movie is added to "My Watchlist"
+
 
   Scenario Outline: Rate this movie
-    Rate movie as 1 star, Rate movie as 5 stars
+
+  Rate movie as 1 star, Rate movie as 5 stars
 
     Given I load the "<page>"
     And I click on the "<link>"

@@ -20,9 +20,9 @@ Feature: Top Rated Movies
 
     Examples:
       | page                  | genre  | relevant results |
-      | Top Rated Movies page | Comedy | 1,662 titles     |
-      | Top Rated Movies page | Action | 1,217 titles     |
-      | Top Rated Movies page | Drama  | 2,386 titles     |
+      | Top Rated Movies page | Comedy | 1,663 titles     |
+      | Top Rated Movies page | Action | 1,219 titles     |
+      | Top Rated Movies page | Drama  | 2,384 titles     |
 
   Scenario: Sorting Movies List by Release Date
 

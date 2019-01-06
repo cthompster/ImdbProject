@@ -7,11 +7,7 @@
   <component name="ChangeListManager">
     <list default="true" id="a4ad7916-1ce2-4d4d-ac4c-89de76e12c13" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/dataProviders/ConfigFileReader.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/dataProviders/ConfigFileReader.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/resources/configuration.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/resources/configuration.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/resources/imdbTests/top_rated_movies.feature" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/resources/imdbTests/top_rated_movies.feature" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/test-classes/configuration.properties" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/configuration.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/test-classes/dataProviders/ConfigFileReader.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/dataProviders/ConfigFileReader.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/test-classes/ImdbTests/top_rated_movies.feature" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/ImdbTests/top_rated_movies.feature" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/target/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -47,7 +43,7 @@
     <session id="-1486581721">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="1" />
+          <entry key="project.closed" value="2" />
           <entry key="project.open.time.12" value="1" />
           <entry key="project.open.time.6" value="1" />
           <entry key="project.opened" value="2" />
@@ -58,7 +54,7 @@
           <entry key="feature" value="11" />
           <entry key="gitkeep" value="1" />
           <entry key="html" value="1" />
-          <entry key="java" value="78" />
+          <entry key="java" value="82" />
           <entry key="lst" value="2" />
           <entry key="md" value="1" />
           <entry key="properties" value="9" />
@@ -70,7 +66,7 @@
         <counts>
           <entry key="Cucumber" value="11" />
           <entry key="HTML" value="1" />
-          <entry key="JAVA" value="78" />
+          <entry key="JAVA" value="82" />
           <entry key="Markdown" value="1" />
           <entry key="PLAIN_TEXT" value="4" />
           <entry key="Properties" value="9" />
@@ -103,7 +99,56 @@
     <favorites_list name="hellocucumber" />
   </component>
   <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300" />
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/test/java/imdbTests/ImdbStepdefs.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="837">
+              <caret line="59" column="56" selection-start-line="59" selection-start-column="56" selection-end-line="59" selection-end-column="56" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/test/java/imdbTests/RunImdbTests.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="120">
+              <caret line="8" column="13" selection-start-line="8" selection-start-column="13" selection-end-line="8" selection-end-column="13" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/test/java/hellocucumber/RunCucumberTest.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="135">
+              <caret line="9" selection-start-line="9" selection-end-line="9" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/test/java/hellocucumber/Stepdefs.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="405">
+              <caret line="31" column="13" selection-start-line="31" selection-start-column="13" selection-end-line="31" selection-end-column="13" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -173,10 +218,10 @@
     </treeState>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-1655" />
-    <option name="y" value="84" />
-    <option name="width" value="1582" />
-    <option name="height" value="924" />
+    <option name="x" value="-1680" />
+    <option name="y" value="23" />
+    <option name="width" value="800" />
+    <option name="height" value="577" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
@@ -208,6 +253,13 @@
               <item name="hellocucumber" type="462c0819:PsiDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
               <item name="test" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="hellocucumber" type="b2602c69:ProjectViewProjectNode" />
+              <item name="hellocucumber" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="test" type="462c0819:PsiDirectoryNode" />
               <item name="resources" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
@@ -229,7 +281,7 @@
     <property name="ToolWindowAnt Build.ShowToolbar" value="false" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
-    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1542650323522" />
+    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1543880305486" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/pom.xml" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
@@ -256,7 +308,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Cucumber java.Feature: top_rated_movies">
+  <component name="RunManager" selected="JUnit.RunImdbTest">
     <configuration name="ImdbSeleniumTest" type="Application" factoryName="Application" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="imdbTests.ImdbSeleniumTest" />
       <module name="imdb" />
@@ -413,11 +465,11 @@
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="JUnit.RunImdbTest" />
         <item itemvalue="Cucumber java.Feature: top_rated_movies" />
         <item itemvalue="Cucumber java.Scenario: Sorting Movies List by Release Date" />
         <item itemvalue="Cucumber java.Scenario: Create a new IMDB account" />
         <item itemvalue="Cucumber java.Scenario: Add Movie to watchlist" />
-        <item itemvalue="JUnit.RunImdbTest" />
       </list>
     </recent_temporary>
   </component>
@@ -432,17 +484,11 @@
       <option name="presentableId" value="Default" />
       <updated>1542366688460</updated>
       <workItem from="1542366695957" duration="75740000" />
-      <workItem from="1542670233453" duration="2182000" />
+      <workItem from="1542670233453" duration="5064000" />
     </task>
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="Feature__top_rated_movies - 2018.11.26 at 10h 34m 29s.xml">
-      <configuration name="Feature: top_rated_movies" configurationId="CucumberJavaRunConfigurationType" />
-    </history-entry>
-    <history-entry file="Feature__top_rated_movies - 2018.11.26 at 10h 35m 12s.xml">
-      <configuration name="Feature: top_rated_movies" configurationId="CucumberJavaRunConfigurationType" />
-    </history-entry>
     <history-entry file="Feature__top_rated_movies - 2018.11.26 at 10h 36m 11s.xml">
       <configuration name="Feature: top_rated_movies" configurationId="CucumberJavaRunConfigurationType" />
     </history-entry>
@@ -467,9 +513,15 @@
     <history-entry file="Feature__top_rated_movies - 2018.11.26 at 10h 43m 40s.xml">
       <configuration name="Feature: top_rated_movies" configurationId="CucumberJavaRunConfigurationType" />
     </history-entry>
+    <history-entry file="Feature__top_rated_movies - 2018.11.26 at 10h 48m 33s.xml">
+      <configuration name="Feature: top_rated_movies" configurationId="CucumberJavaRunConfigurationType" />
+    </history-entry>
+    <history-entry file="RunImdbTest - 2018.11.26 at 16h 07m 45s.xml">
+      <configuration name="RunImdbTest" configurationId="JUnit" />
+    </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="77922000" />
+    <option name="totallyTimeSpent" value="80804000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -481,14 +533,14 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-1655" y="84" width="1582" height="924" extended-state="0" />
+    <frame x="-1680" y="23" width="800" height="577" extended-state="0" />
     <layout>
       <window_info id="Image Layers" order="0" />
       <window_info id="Designer" order="1" />
       <window_info id="UI Designer" order="2" />
       <window_info id="Learn" order="3" />
       <window_info id="Capture Tool" order="4" />
-      <window_info content_ui="combo" id="Project" order="5" sideWeight="0.49824563" visible="true" weight="0.27857143" />
+      <window_info active="true" content_ui="combo" id="Project" order="5" sideWeight="0.49824563" visible="true" weight="0.5659631" />
       <window_info id="Structure" order="6" sideWeight="0.5017544" side_tool="true" weight="0.24042553" />
       <window_info id="Favorites" order="7" sideWeight="0.5017544" side_tool="true" weight="0.24042553" />
       <window_info anchor="bottom" id="Terminal" order="0" weight="0.3286219" />
@@ -497,7 +549,7 @@
       <window_info anchor="bottom" id="Version Control" order="3" show_stripe_button="false" />
       <window_info anchor="bottom" id="Message" order="4" />
       <window_info anchor="bottom" id="Find" order="5" sideWeight="0.4992908" weight="0.32979977" />
-      <window_info active="true" anchor="bottom" id="Run" order="6" sideWeight="0.76666665" visible="true" weight="0.6600742" />
+      <window_info anchor="bottom" id="Run" order="6" sideWeight="0.76666665" weight="0.61255413" />
       <window_info anchor="bottom" id="Debug" order="7" weight="0.4" />
       <window_info anchor="bottom" id="Messages" order="8" sideWeight="0.4992908" weight="0.3286219" />
       <window_info anchor="bottom" id="Cvs" order="9" weight="0.25" />
@@ -574,9 +626,6 @@
         <state relative-caret-position="-50" />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/test/java/hellocucumber/RunCucumberTest.java">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/test/resources/hellocucumber/.gitkeep">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
@@ -619,16 +668,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="270">
           <caret line="18" column="44" selection-start-line="18" selection-start-column="44" selection-end-line="18" selection-end-column="44" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/test/java/hellocucumber/Stepdefs.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="161">
-          <caret line="21" column="26" selection-start-line="21" selection-start-column="26" selection-end-line="21" selection-end-column="26" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -681,13 +720,6 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/test/java/SeleniumTests/OnlineStoreTests.java" />
-    <entry file="file://$PROJECT_DIR$/src/test/java/imdbTests/RunImdbTests.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="150">
-          <caret line="10" lean-forward="true" selection-start-line="10" selection-end-line="10" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/test/resources/imdbTests/title_display_page.feature">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1515">
@@ -725,16 +757,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/test/java/imdbTests/ImdbStepdefs.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="885">
-          <caret line="59" column="56" selection-start-line="59" selection-start-column="56" selection-end-line="59" selection-end-column="56" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/test/resources/imdbTests/top_rated_movies.feature">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="140">
@@ -746,6 +768,46 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="75">
           <caret line="5" column="24" lean-forward="true" selection-start-line="5" selection-start-column="24" selection-end-line="5" selection-end-column="24" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/java/imdbTests/ImdbStepdefs.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="837">
+          <caret line="59" column="56" selection-start-line="59" selection-start-column="56" selection-end-line="59" selection-end-column="56" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/java/hellocucumber/Stepdefs.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="405">
+          <caret line="31" column="13" selection-start-line="31" selection-start-column="13" selection-end-line="31" selection-end-column="13" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/java/hellocucumber/RunCucumberTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="135">
+          <caret line="9" selection-start-line="9" selection-end-line="9" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/java/imdbTests/RunImdbTests.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="8" column="13" selection-start-line="8" selection-start-column="13" selection-end-line="8" selection-end-column="13" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

@@ -26,7 +26,12 @@ public class TitlePage extends BasePage {
 
     @Override
     protected String path() {
-        return "/title/" + config.getTitleId() + "/";
+        return "/title/" + getTitleId() + "/";
+    }
+
+    /** IMDB id of the movie this page shows, e.g. tt0111161 (the {@code titleId} setting). */
+    public String getTitleId() {
+        return config.getTitleId();
     }
 
     @Override

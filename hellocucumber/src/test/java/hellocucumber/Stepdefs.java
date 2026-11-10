@@ -6,29 +6,7 @@ import io.cucumber.java.en.When;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class IsItFriday {
-    static String isItFriday(String today) {
-
-        switch (today) {
-            case "Friday":
-                return "TGIF";
-            case "Saturday":
-                return "It's Saturday Dude!";
-            case "Sunday":
-                return "Naw.. Sunday, man!";
-            case "Monday":
-                return "Moody Monday!";
-            case "Tuesday":
-                return "Tutu Tuesday!";
-            case "Wednesday":
-                return "Wha wha, Wednesday!";
-            case "Thursday":
-                return "Thirsty Thursday";
-        }
-        return "Invalid Day Bro' !";
-    }
-}
-
+/** Steps for is_it_friday_yet.feature. */
 public class Stepdefs {
     private String today;
     private String actualAnswer;

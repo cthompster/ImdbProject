@@ -26,6 +26,9 @@ public abstract class BasePage {
     private static final By CONSENT_ACCEPT = By.xpath(
             "//*[contains(@data-testid,'consent') or contains(@data-testid,'cookie')]//button[normalize-space()='Accept']");
 
+    /** First number in the text, allowing thousands separators: "250 Titles" gives 250. */
+    private static final Pattern FIRST_NUMBER = Pattern.compile("(\\d[\\d,]*)");
+
     protected final WebDriver driver;
     protected final ConfigFileReader config;
     protected final WebDriverWait wait;
@@ -159,9 +162,6 @@ public abstract class BasePage {
     protected Object js(String script, Object... args) {
         return ((JavascriptExecutor) driver).executeScript(script, args);
     }
-
-    /** First number in the text, allowing thousands separators: "250 Titles" gives 250. */
-    private static final Pattern FIRST_NUMBER = Pattern.compile("(\\d[\\d,]*)");
 
     protected static int parseCount(String text) {
         return parseCount(text, FIRST_NUMBER);

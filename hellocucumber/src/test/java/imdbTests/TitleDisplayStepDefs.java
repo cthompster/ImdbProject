@@ -8,7 +8,6 @@ import java.util.List;
 
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import managers.FileReaderManager;
 import pageObjects.TitlePage;
 
 /** Steps for title_display_page.feature. */
@@ -43,7 +42,7 @@ public class TitleDisplayStepDefs {
     @Then("the {string} option should share this movie via {string}")
     public void theOptionShouldShareThisMovieVia(String option, String linkStart) {
         String href = titlePage.getShareLink(option);
-        String titleId = FileReaderManager.getInstance().getConfigReader().getTitleId();
+        String titleId = titlePage.getTitleId();
         assertNotNull(href, "\"" + option + "\" has no link");
         assertTrue(href.startsWith(linkStart), "\"" + option + "\" links to " + href + ", expected it to start with " + linkStart);
         assertTrue(href.contains(titleId), "\"" + option + "\" link does not mention " + titleId + ": " + href);

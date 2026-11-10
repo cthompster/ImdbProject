@@ -29,15 +29,17 @@ public class ImdbStepdefs {
 
     @Then("the results should be filtered by the {string} genre")
     public void theResultsShouldBeFilteredByGenre(String genre) {
-        assertTrue(genreResults.isFilteredByGenre(genre),
-                () -> "Expected \"" + genre + "\" to be an applied filter on " + genreResults.getCurrentUrl());
+        GenreSearchResultsPage results = genreResults();
+        assertTrue(results.isFilteredByGenre(genre),
+                () -> "Expected \"" + genre + "\" to be an applied filter on " + results.getCurrentUrl());
     }
 
     @Then("the results should contain at least {int} title(s)")
     public void theResultsShouldContainAtLeast(int minimum) {
-        int total = genreResults.getTotalResults();
+        GenreSearchResultsPage results = genreResults();
+        int total = results.getTotalResults();
         assertTrue(total >= minimum, "Expected at least " + minimum + " titles but IMDB reports " + total);
-        assertTrue(genreResults.getDisplayedResultCount() > 0, "IMDB reports " + total + " titles but none are listed");
+        assertTrue(results.getDisplayedResultCount() > 0, "IMDB reports " + total + " titles but none are listed");
     }
 
     @When("I sort the list by {string} in {word} order")
@@ -58,5 +60,13 @@ public class ImdbStepdefs {
         List<Integer> sorted = new ArrayList<>(years);
         sorted.sort(comparator);
         assertEquals(sorted, years, () -> "Release years are not in " + order + " order");
+    }
+
+    private GenreSearchResultsPage genreResults() {
+        if (genreResults == null) {
+            throw new IllegalStateException("There are no genre results to check. "
+                    + "Put a \"When I refine by Genre ...\" step before it.");
+        }
+        return genreResults;
     }
 }

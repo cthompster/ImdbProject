@@ -69,11 +69,16 @@ public class WebDriverManager {
                 newDriver = createChromeDriver();
                 break;
         }
-        if (config.isWindowMaximize() && !config.isHeadless()) {
-            newDriver.manage().window().maximize();
+        try {
+            if (config.isWindowMaximize() && !config.isHeadless()) {
+                newDriver.manage().window().maximize();
+            }
+            // Page objects use explicit waits; mixing them with implicit waits causes unpredictable timeouts.
+            newDriver.manage().timeouts().implicitlyWait(Duration.ZERO);
+        } catch (RuntimeException e) {
+            quitQuietly(newDriver, e);
+            throw e;
         }
-        // Page objects use explicit waits; mixing them with implicit waits causes unpredictable timeouts.
-        newDriver.manage().timeouts().implicitlyWait(Duration.ZERO);
         return newDriver;
     }
 
@@ -94,9 +99,26 @@ public class WebDriverManager {
             throw e;
         }
         if (profile != null) {
-            startSignedOut(chrome);
+            try {
+                startSignedOut(chrome);
+            } catch (RuntimeException e) {
+                quitQuietly(chrome, e);
+                throw e;
+            }
         }
         return chrome;
+    }
+
+    /**
+     * Closes a browser whose setup failed. It isn't stored in {@code driver} yet, so the After hook can't
+     * close it, and a Chrome left open keeps the shared profile locked for every later scenario.
+     */
+    private static void quitQuietly(WebDriver browser, RuntimeException cause) {
+        try {
+            browser.quit();
+        } catch (RuntimeException quitFailure) {
+            cause.addSuppressed(quitFailure);
+        }
     }
 
     /**

@@ -86,8 +86,20 @@ public class ConfigFileReader {
         }
     }
 
-    public boolean isHeadless() {
+    /** What -Dheadless / the headless setting asks for. */
+    public boolean isHeadlessRequested() {
         return getBoolean("headless", false);
+    }
+
+    /** Whether the browser actually runs without a window. Safari has no headless mode, so it is never headless. */
+    public boolean isHeadless() {
+        return isHeadlessRequested() && getBrowser() != DriverType.SAFARI;
+    }
+
+    /** Browser name for messages, e.g. "Chrome". */
+    public String getBrowserDisplayName() {
+        String name = getBrowser().name();
+        return name.charAt(0) + name.substring(1).toLowerCase(Locale.ROOT);
     }
 
     public boolean isWindowMaximize() {

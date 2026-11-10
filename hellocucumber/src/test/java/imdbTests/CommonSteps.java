@@ -25,13 +25,16 @@ public class CommonSteps {
 
     @Given("I am not logged in")
     public void iAmNotLoggedIn() {
-        BasePage page = currentPage != null ? currentPage : pages.getTitlePage();
-        assertTrue(page.isSignedOut(), "Expected to be signed out, but the header has no \"Sign in\" link");
+        if (currentPage == null) {
+            throw new IllegalStateException("\"I am not logged in\" needs a page to check. "
+                    + "Put a \"Given I load the ...\" step before it.");
+        }
+        assertTrue(currentPage.isSignedOut(), "Expected to be signed out, but the header has no \"Sign in\" link");
     }
 
     @Then("I should be taken to the {string}")
     public void iShouldBeTakenToThe(String pageName) {
         BasePage expected = pages.getPage(PageName.fromLabel(pageName));
-        assertTrue(expected.isCurrent(), "Expected the " + pageName + " but the browser is on " + expected.getCurrentUrl());
+        assertTrue(expected.isCurrent(), () -> "Expected the " + pageName + " but the browser is on " + expected.getCurrentUrl());
     }
 }

@@ -2,6 +2,8 @@ package pageObjects;
 
 import java.util.Locale;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
@@ -62,8 +64,23 @@ public abstract class BasePage {
 
     /** Call after anything that loads a new page: handles the CAPTCHA and the consent banner. */
     protected void afterNavigation() {
+        failIfAccessDenied();
         waitForHumanVerificationIfShown();
         driver.findElements(CONSENT_ACCEPT).stream().filter(WebElement::isDisplayed).findFirst().ifPresent(WebElement::click);
+    }
+
+    /**
+     * IMDB's bot protection sometimes refuses a request outright with "403 Forbidden", which happens
+     * mostly to headless browsers. Stop with an explanation instead of timing out waiting for elements.
+     */
+    private void failIfAccessDenied() {
+        String title = String.valueOf(driver.getTitle());
+        if (title.contains("403 Forbidden")) {
+            throw new IllegalStateException("IMDB refused the request (403 Forbidden) for " + driver.getCurrentUrl() + ". "
+                    + (config.isHeadless()
+                        ? "IMDB blocks headless browsers on some pages; run without -Dheadless=true."
+                        : "IMDB's bot protection is blocking this browser; try again later."));
+        }
     }
 
     private boolean isCaptchaShown() {
@@ -82,8 +99,8 @@ public abstract class BasePage {
                     + "in headless mode. Run without -Dheadless=true and solve it in the browser window.");
         }
         long seconds = config.getCaptchaWait().getSeconds();
-        System.out.println("\n>>> IMDB is asking you to confirm you are human. Solve the CAPTCHA in the Chrome window. "
-                + "Waiting up to " + seconds + " seconds...\n");
+        System.out.println("\n>>> IMDB is asking you to confirm you are human. Solve the CAPTCHA in the "
+                + config.getBrowserDisplayName() + " window. Waiting up to " + seconds + " seconds...\n");
         new WebDriverWait(driver, config.getCaptchaWait())
                 .withMessage("the CAPTCHA was not solved within " + seconds + " seconds")
                 .until(d -> !isCaptchaShown());
@@ -138,6 +155,20 @@ public abstract class BasePage {
 
     protected Object js(String script, Object... args) {
         return ((JavascriptExecutor) driver).executeScript(script, args);
+    }
+
+    /** First number in the text, allowing thousands separators: "250 Titles" gives 250. */
+    private static final Pattern FIRST_NUMBER = Pattern.compile("(\\d[\\d,]*)");
+
+    protected static int parseCount(String text) {
+        return parseCount(text, FIRST_NUMBER);
+    }
+
+    /** The number captured by group 1 of the pattern, e.g. "of (\\d[\\d,]*)" on "1-50 of 2,640" gives 2640. */
+    protected static int parseCount(String text, Pattern pattern) {
+        Matcher m = pattern.matcher(text);
+        if (!m.find()) throw new IllegalStateException("Could not read a count from \"" + text + "\"");
+        return Integer.parseInt(m.group(1).replace(",", ""));
     }
 
     /** Quote a value for use inside an XPath string literal. */

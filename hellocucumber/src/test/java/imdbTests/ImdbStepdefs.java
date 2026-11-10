@@ -30,7 +30,7 @@ public class ImdbStepdefs {
     @Then("the results should be filtered by the {string} genre")
     public void theResultsShouldBeFilteredByGenre(String genre) {
         assertTrue(genreResults.isFilteredByGenre(genre),
-                "Expected \"" + genre + "\" to be an applied filter on " + genreResults.getCurrentUrl());
+                () -> "Expected \"" + genre + "\" to be an applied filter on " + genreResults.getCurrentUrl());
     }
 
     @Then("the results should contain at least {int} title(s)")
@@ -48,14 +48,15 @@ public class ImdbStepdefs {
 
     @Then("all {int} movies should be listed in {word} order of release year")
     public void moviesShouldBeInOrderOfReleaseYear(int expectedCount, String order) {
-        List<Integer> years = topRatedPage.getReleaseYears();
-        assertEquals(expectedCount, topRatedPage.getTotalTitles(), "Total shown above the list");
+        int total = topRatedPage.getTotalTitles();
+        assertEquals(expectedCount, total, "Total shown above the list");
+        List<Integer> years = topRatedPage.getReleaseYears(total);
         assertEquals(expectedCount, years.size(), "Movies with a release year in the list");
 
         Comparator<Integer> comparator = SortOrder.fromText(order) == SortOrder.ASCENDING
                 ? Comparator.naturalOrder() : Comparator.reverseOrder();
         List<Integer> sorted = new ArrayList<>(years);
         sorted.sort(comparator);
-        assertEquals(sorted, years, "Release years are not in " + order + " order");
+        assertEquals(sorted, years, () -> "Release years are not in " + order + " order");
     }
 }

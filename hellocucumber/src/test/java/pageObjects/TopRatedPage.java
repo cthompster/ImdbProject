@@ -2,8 +2,6 @@ package pageObjects;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.openqa.selenium.By;
@@ -25,7 +23,6 @@ public class TopRatedPage extends BasePage {
             "ul.ipc-metadata-list > li.ipc-metadata-list-summary-item .cli-title-metadata li:first-child");
     private static final By SORT_SELECT = By.id("sort-by-selector");
     private static final By SORT_ORDER_BUTTON = By.id("swap-sort-order-button");
-    private static final Pattern NUMBER = Pattern.compile("(\\d[\\d,]*)");
 
     /** React ignores a plain value change; use the native setter and fire 'change' like a user selection. */
     private static final String SELECT_OPTION_JS =
@@ -50,7 +47,7 @@ public class TopRatedPage extends BasePage {
 
     /** The "250 Titles" count shown above the list. */
     public int getTotalTitles() {
-        return parseNumber(visible(TOTAL_TITLES).getText());
+        return parseCount(visible(TOTAL_TITLES).getText());
     }
 
     /** Clicks a chip in the "Top rated movies by genre" section, which opens IMDB's title search for that genre. */
@@ -97,12 +94,13 @@ public class TopRatedPage extends BasePage {
         waitForFirstTitleToChangeFrom(firstTitle);
     }
 
-    /** Release year of every movie in the list, top to bottom. */
-    public List<Integer> getReleaseYears() {
-        // After a re-sort IMDB redraws the list in batches; wait until every row has its metadata again.
-        int total = getTotalTitles();
+    /**
+     * Release year of every movie in the list, top to bottom. After a re-sort IMDB redraws the list in
+     * batches, so this first waits until {@code expectedRows} rows have their year again.
+     */
+    public List<Integer> getReleaseYears(int expectedRows) {
         try {
-            waitFor(d -> d.findElements(RELEASE_YEARS).size() >= total);
+            waitFor(d -> d.findElements(RELEASE_YEARS).size() >= expectedRows);
         } catch (TimeoutException e) {
             // Fall through: the caller's assertion reports how many rows were found.
         }
@@ -128,9 +126,4 @@ public class TopRatedPage extends BasePage {
         });
     }
 
-    static int parseNumber(String text) {
-        Matcher m = NUMBER.matcher(text);
-        if (!m.find()) throw new IllegalStateException("No number found in \"" + text + "\"");
-        return Integer.parseInt(m.group(1).replace(",", ""));
-    }
 }

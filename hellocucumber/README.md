@@ -22,7 +22,7 @@ matches your installed browser automatically.
         mvn test
 
     Options (any key in configuration.properties can be overridden with -D):
-        mvn test -Dheadless=true          run without a visible browser window
+        mvn test -Dheadless=true          run without a visible browser window (IMDB may block this)
         mvn test -Dbrowser=firefox        use Firefox (or safari)
         mvn test -DtitleId=tt0068646      use a different movie for title_display_page.feature
 
@@ -37,8 +37,11 @@ matches your installed browser automatically.
 IMDB sometimes shows an Amazon CAPTCHA to automated browsers. When that happens the run prints a
 message and waits (up to `captchaWaitSeconds`, default 180) for you to solve it in the Chrome window.
 Chrome uses its own profile in `chrome-profile/` (not in git), so once solved the check usually
-stays passed for the rest of the run and for later runs. Headless runs can't show the CAPTCHA;
+stays passed for the rest of the run and for later runs. Each scenario still starts signed out:
+every cookie except the CAPTCHA pass is cleared when the browser opens. Headless runs can't show the CAPTCHA;
 if it appears they stop with an explanation. Run once with a visible browser first.
+IMDB may also refuse headless browsers outright ("403 Forbidden"); as of November 2026 it does so
+for every page the suite uses. The run then stops right away with an explanation. Use a visible browser.
 
 **Key Files**
 
@@ -61,7 +64,8 @@ if it appears they stop with an explanation. Run once with a visible browser fir
 
     Configuration:
         src/test/resources/configuration.properties   browser, URL, waits, movie, profile folder
-        src/test/resources/junit-platform.properties  skips scenarios tagged @manual
+        src/test/resources/junit-platform.properties  skips @manual scenarios (Maven, RunImdbTests)
+        src/test/resources/cucumber.properties        skips @manual scenarios (IntelliJ right-click Run)
 
 **Manual scenarios**
 

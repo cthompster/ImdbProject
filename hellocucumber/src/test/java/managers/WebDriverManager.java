@@ -1,8 +1,16 @@
 package managers;
 
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
+import org.openqa.selenium.PageLoadStrategy;
+import org.openqa.selenium.SessionNotCreatedException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -17,6 +25,9 @@ import dataProviders.ConfigFileReader;
  * downloads a driver that matches the installed browser, so no driver path is configured.
  */
 public class WebDriverManager {
+    /** Cookie in which IMDB's bot protection (AWS WAF) records a solved CAPTCHA. */
+    private static final String CAPTCHA_PASS_COOKIE = "aws-waf-token";
+
     private final ConfigFileReader config = FileReaderManager.getInstance().getConfigReader();
     private WebDriver driver;
 
@@ -48,11 +59,14 @@ public class WebDriverManager {
                 newDriver = new FirefoxDriver(firefoxOptions());
                 break;
             case SAFARI:
+                if (config.isHeadlessRequested()) {
+                    System.out.println(">>> Safari has no headless mode; it will open a normal window.");
+                }
                 newDriver = new SafariDriver();
                 break;
             case CHROME:
             default:
-                newDriver = new ChromeDriver(chromeOptions());
+                newDriver = createChromeDriver();
                 break;
         }
         if (config.isWindowMaximize() && !config.isHeadless()) {
@@ -63,10 +77,64 @@ public class WebDriverManager {
         return newDriver;
     }
 
-    private ChromeOptions chromeOptions() {
-        ChromeOptions options = new ChromeOptions();
-        options.addArguments("--disable-notifications", "--lang=en-US", "--window-size=1400,1000");
+    private ChromeDriver createChromeDriver() {
         Path profile = config.getChromeProfileDir();
+        ChromeDriver chrome;
+        try {
+            chrome = new ChromeDriver(chromeOptions(profile));
+        } catch (SessionNotCreatedException e) {
+            // Chrome leaves a SingletonLock link in a profile it is using. Newer Chrome versions only report
+            // "Chrome instance exited", so check for the lock rather than the message.
+            if (profile != null && (String.valueOf(e.getMessage()).contains("already in use")
+                    || Files.exists(profile.resolve("SingletonLock"), LinkOption.NOFOLLOW_LINKS))) {
+                throw new IllegalStateException("Chrome could not start: the profile " + profile + " is in use by another Chrome. "
+                        + "Close any Chrome left open by an earlier test run (or wait for another run to finish). "
+                        + "If no Chrome is running, delete " + profile.resolve("SingletonLock") + ".", e);
+            }
+            throw e;
+        }
+        if (profile != null) {
+            startSignedOut(chrome);
+        }
+        return chrome;
+    }
+
+    /**
+     * The shared profile keeps cookies between runs. So that every scenario starts signed out and
+     * independent of earlier ones, clear all cookies except the CAPTCHA pass.
+     */
+    @SuppressWarnings("unchecked")
+    private static void startSignedOut(ChromeDriver chrome) {
+        List<Map<String, Object>> cookies =
+                (List<Map<String, Object>>) chrome.executeCdpCommand("Storage.getCookies", Map.of()).get("cookies");
+        List<Map<String, Object>> keep = cookies.stream()
+                .filter(c -> CAPTCHA_PASS_COOKIE.equals(c.get("name")))
+                .map(WebDriverManager::toCookieParam)
+                .collect(Collectors.toList());
+        chrome.executeCdpCommand("Storage.clearCookies", Map.of());
+        if (!keep.isEmpty()) {
+            chrome.executeCdpCommand("Storage.setCookies", Map.of("cookies", keep));
+        }
+    }
+
+    /** Converts a cookie returned by Storage.getCookies into the form Storage.setCookies accepts. */
+    private static Map<String, Object> toCookieParam(Map<String, Object> cookie) {
+        Map<String, Object> param = new HashMap<>();
+        for (String key : List.of("name", "value", "domain", "path", "secure", "httpOnly", "sameSite", "priority")) {
+            if (cookie.get(key) != null) param.put(key, cookie.get(key));
+        }
+        if (!Boolean.TRUE.equals(cookie.get("session")) && cookie.get("expires") != null) {
+            param.put("expires", cookie.get("expires"));
+        }
+        return param;
+    }
+
+    private ChromeOptions chromeOptions(Path profile) {
+        ChromeOptions options = new ChromeOptions();
+        // Return from driver.get() once the HTML is ready instead of waiting for every ad and tracker
+        // to finish; page objects wait for the exact elements they need.
+        options.setPageLoadStrategy(PageLoadStrategy.EAGER);
+        options.addArguments("--disable-notifications", "--lang=en-US", "--window-size=1400,1000");
         if (profile != null) {
             // Reusing one profile keeps IMDB's human-verification cookie between scenarios.
             options.addArguments("--user-data-dir=" + profile);
@@ -79,6 +147,7 @@ public class WebDriverManager {
 
     private FirefoxOptions firefoxOptions() {
         FirefoxOptions options = new FirefoxOptions();
+        options.setPageLoadStrategy(PageLoadStrategy.EAGER);
         options.addPreference("intl.accept_languages", "en-US");
         if (config.isHeadless()) {
             options.addArguments("-headless");

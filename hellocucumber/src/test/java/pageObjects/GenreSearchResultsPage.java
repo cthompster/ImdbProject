@@ -1,6 +1,5 @@
 package pageObjects;
 
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.openqa.selenium.By;
@@ -30,10 +29,7 @@ public class GenreSearchResultsPage extends BasePage {
 
     /** Total number of matching titles, e.g. 2640 for "1-50 of 2,640". */
     public int getTotalResults() {
-        String text = visible(RESULT_RANGE).getText();
-        Matcher m = TOTAL.matcher(text);
-        if (!m.find()) throw new IllegalStateException("Could not read the result count from \"" + text + "\"");
-        return Integer.parseInt(m.group(1).replace(",", ""));
+        return parseCount(visible(RESULT_RANGE).getText(), TOTAL);
     }
 
     public int getDisplayedResultCount() {

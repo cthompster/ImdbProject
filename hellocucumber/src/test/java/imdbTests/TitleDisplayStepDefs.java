@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
+
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import managers.FileReaderManager;
@@ -34,8 +36,8 @@ public class TitleDisplayStepDefs {
 
     @Then("the share menu should offer {string}")
     public void theShareMenuShouldOffer(String option) {
-        assertTrue(titlePage.getShareOptions().stream().anyMatch(option::equalsIgnoreCase),
-                "Share menu options were " + titlePage.getShareOptions());
+        List<String> options = titlePage.getShareOptions();
+        assertTrue(options.stream().anyMatch(option::equalsIgnoreCase), () -> "Share menu options were " + options);
     }
 
     @Then("the {string} option should share this movie via {string}")

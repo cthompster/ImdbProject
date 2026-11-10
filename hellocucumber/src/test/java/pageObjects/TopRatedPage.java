@@ -17,7 +17,9 @@ import enums.SortOrder;
 public class TopRatedPage extends BasePage {
     private static final By TOTAL_TITLES = By.cssSelector("[data-testid='chart-layout-total-items']");
     private static final By LIST_ITEMS = By.cssSelector("ul.ipc-metadata-list > li.ipc-metadata-list-summary-item");
-    private static final By ITEM_TITLE = By.cssSelector(".ipc-title__text");
+    /** Title of each row in the list; the page heading uses the same class, so stay inside the list. */
+    private static final By ROW_TITLES = By.cssSelector(
+            "ul.ipc-metadata-list > li.ipc-metadata-list-summary-item .ipc-title__text");
     /** First entry of each row's metadata line ("1994 · 2h 22m · R") is the release year. */
     private static final By RELEASE_YEARS = By.cssSelector(
             "ul.ipc-metadata-list > li.ipc-metadata-list-summary-item .cli-title-metadata li:first-child");
@@ -69,7 +71,8 @@ public class TopRatedPage extends BasePage {
         List<WebElement> options = new Select(select).getOptions();
         String value = options.stream()
                 .filter(o -> label.trim().equalsIgnoreCase(String.valueOf(o.getDomProperty("text")).trim()))
-                .map(o -> o.getDomAttribute("value"))
+                // The property falls back to the option's text when it has no value attribute, as the browser does.
+                .map(o -> String.valueOf(o.getDomProperty("value")))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("No sort option \"" + label + "\". Options: "
                         + options.stream().map(o -> String.valueOf(o.getDomProperty("text"))).collect(Collectors.joining(", "))));
@@ -77,13 +80,22 @@ public class TopRatedPage extends BasePage {
         String firstTitle = firstTitle();
         js(SELECT_OPTION_JS, select, value);
         waitFor(ExpectedConditions.urlContains("sort=" + value.toLowerCase(Locale.ROOT)));
-        waitForFirstTitleToChangeFrom(firstTitle);
+        // Most sort fields put a different movie first; wait for that so callers don't read the old list.
+        // Some (e.g. "IMDb rating" from "Ranking") may keep the same movie first, so a timeout here isn't an error.
+        try {
+            waitForFirstTitleToChangeFrom(firstTitle);
+        } catch (TimeoutException e) {
+            // The URL already shows the new sort; the list kept its first movie.
+        }
     }
 
     public SortOrder getSortOrder() {
         // The button's label names the order currently applied, e.g. "Ascending sort order".
-        String label = String.valueOf(visible(SORT_ORDER_BUTTON).getDomAttribute("aria-label")).toLowerCase(Locale.ROOT);
-        return label.startsWith("ascending") ? SortOrder.ASCENDING : SortOrder.DESCENDING;
+        String label = visible(SORT_ORDER_BUTTON).getDomAttribute("aria-label");
+        String lower = String.valueOf(label).toLowerCase(Locale.ROOT);
+        if (lower.startsWith("ascending")) return SortOrder.ASCENDING;
+        if (lower.startsWith("descending")) return SortOrder.DESCENDING;
+        throw new IllegalStateException("Can't tell the sort order from the sort button's label: \"" + label + "\"");
     }
 
     public void setSortOrder(SortOrder order) {
@@ -116,12 +128,12 @@ public class TopRatedPage extends BasePage {
     }
 
     private String firstTitle() {
-        return visible(LIST_ITEMS).findElement(ITEM_TITLE).getText();
+        return visible(ROW_TITLES).getText();
     }
 
     private void waitForFirstTitleToChangeFrom(String previous) {
         waitFor(d -> {
-            List<WebElement> titles = d.findElements(ITEM_TITLE);
+            List<WebElement> titles = d.findElements(ROW_TITLES);
             return !titles.isEmpty() && !titles.get(0).getText().equals(previous);
         });
     }

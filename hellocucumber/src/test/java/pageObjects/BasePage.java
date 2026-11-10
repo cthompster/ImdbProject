@@ -7,6 +7,7 @@ import java.util.regex.Pattern;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -33,6 +34,8 @@ public abstract class BasePage {
         this.driver = driver;
         this.config = FileReaderManager.getInstance().getConfigReader();
         this.wait = new WebDriverWait(driver, config.getExplicitWait());
+        // React redraws lists (e.g. after a re-sort); an element read mid-redraw goes stale. Retry instead of failing.
+        this.wait.ignoring(StaleElementReferenceException.class);
     }
 
     /** Path of this page relative to the site URL, e.g. {@code /chart/top/}. */

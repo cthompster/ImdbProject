@@ -1,65 +1,61 @@
 package imdbTests;
 
-import cucumber.api.java.en.And;
-import cucumber.api.java.en.Given;
-import cucumber.api.java.en.Then;
-import pageObjects.ImdbPage;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import static org.junit.Assert.assertEquals;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
+import enums.SortOrder;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
+import pageObjects.GenreSearchResultsPage;
+import pageObjects.TopRatedPage;
+
+/** Steps for top_rated_movies.feature. */
 public class ImdbStepdefs {
-
-    private ImdbPage imdbPage;
-    private TestContext testContext;
+    private final TopRatedPage topRatedPage;
+    private GenreSearchResultsPage genreResults;
 
     public ImdbStepdefs(TestContext context) {
-        imdbPage = context.getPageObjectManager().getImdbPage();
-        testContext = new TestContext();
+        this.topRatedPage = context.getPageObjectManager().getTopRatedPage();
     }
 
-
-    @Given("^I load the \"([^\"]*)\"$")
-    public void i_load_the_Top_Rated_Movies_page(String imdbPage) {
-        this.imdbPage.navigateTo_ImdbPage();
-        this.imdbPage.filterTopRatedMovies();
-        System.out.println("[ ==> Step 1: Loaded Top Rated Movies page ");
-        System.out.println();
+    @When("I refine by Genre {string}")
+    public void iRefineByGenre(String genre) {
+        genreResults = topRatedPage.refineByGenre(genre);
     }
 
-    @And("^I refine by Genre \"([^\"]*)\"$")
-    public void i_refine_by_Genre(String genre) {
-        imdbPage.refineByGenre(genre);
-        System.out.println("[ ==> Step 2: Refined movies by genre: " + genre );
-        System.out.println();
+    @Then("the results should be filtered by the {string} genre")
+    public void theResultsShouldBeFilteredByGenre(String genre) {
+        assertTrue(genreResults.isFilteredByGenre(genre),
+                "Expected \"" + genre + "\" to be an applied filter on " + genreResults.getCurrentUrl());
     }
 
-    @And("^I sort the list by \"([^\"]*)\"$")
-    public void i_sort_the_list_by_Release_Date(String releaseDate) {
-        imdbPage.sortMoviesByReleaseDate();
-        System.out.println("[ ==> Step 2: Sorted movies by: " + releaseDate );
-        System.out.println();
+    @Then("the results should contain at least {int} title(s)")
+    public void theResultsShouldContainAtLeast(int minimum) {
+        int total = genreResults.getTotalResults();
+        assertTrue(total >= minimum, "Expected at least " + minimum + " titles but IMDB reports " + total);
+        assertTrue(genreResults.getDisplayedResultCount() > 0, "IMDB reports " + total + " titles but none are listed");
     }
 
-
-    @Then("^the list of movies should only contain \"([^\"]*)\"$")
-    public void the_list_of_movies_should_only_contain_relevant_results(String expectedResults) {
-        String actualResults = imdbPage.getMovieTitleCount();
-        assertEquals(expectedResults, actualResults);
-        System.out.println("[ ==> Step 3: Verified results - Expected: <" + expectedResults + ">  ..and found: <" + actualResults + ">");
-        System.out.println();
-        testContext.getWebDriverManager().closeDriver();
+    @When("I sort the list by {string} in {word} order")
+    public void iSortTheListBy(String field, String order) {
+        topRatedPage.sortBy(field);
+        topRatedPage.setSortOrder(SortOrder.fromText(order));
     }
 
-    @Then("^the list of movies should be displayed in order of \"([^\"]*)\"$")
-    public void the_list_of_movies_should_be_displayed_in_order_of(String descendingReleaseDate) {
-        String expectedFirstMovie = "The Kid (1921)";
-        String actualFirstMovie = imdbPage.getEarliestMovieDate();
-        assertEquals(expectedFirstMovie, actualFirstMovie);
-        System.out.println("[ ==> Step 3: Verified results - Expected: <" + expectedFirstMovie + ">  ..and found: <" + actualFirstMovie + ">");
-        System.out.println();
-        testContext.getWebDriverManager().closeDriver();
+    @Then("all {int} movies should be listed in {word} order of release year")
+    public void moviesShouldBeInOrderOfReleaseYear(int expectedCount, String order) {
+        List<Integer> years = topRatedPage.getReleaseYears();
+        assertEquals(expectedCount, topRatedPage.getTotalTitles(), "Total shown above the list");
+        assertEquals(expectedCount, years.size(), "Movies with a release year in the list");
+
+        Comparator<Integer> comparator = SortOrder.fromText(order) == SortOrder.ASCENDING
+                ? Comparator.naturalOrder() : Comparator.reverseOrder();
+        List<Integer> sorted = new ArrayList<>(years);
+        sorted.sort(comparator);
+        assertEquals(sorted, years, "Release years are not in " + order + " order");
     }
-
-
-
 }

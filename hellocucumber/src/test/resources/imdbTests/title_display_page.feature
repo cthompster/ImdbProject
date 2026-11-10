@@ -1,129 +1,141 @@
 Feature: Title Display Page
 
-  The "Title Display Page" displays the title, a summary, and a list of the details and attributes
-  about one movie. The user can rate the movie, add to watchlist, or rent it via Amazon Prime Video.
+  The "Title Display Page" shows one movie's title, summary, ratings, cast and details.
+  Users can rate it, add it to their watchlist and share it. The movie comes from
+  "titleId" in configuration.properties.
 
-  Scenario: Add Movie to watchlist
+  Scenarios tagged @manual need real IMDB, Amazon, Facebook or Google accounts, and
+  they hit CAPTCHAs and 2-step verification. They document the expected behavior and
+  are run by hand. Automated runs skip them (see junit-platform.properties).
 
-  On the Title display page the main function is to add the movie to the users watchlist and provide
-  information about the movie details and summary (i.e., rating, release date, writers, directors, cast,
-  genres, and length of movie in hours and minutes. The user can also share on social media and read previews.
+  Scenario: Add Movie to watchlist while signed out
+
+  A signed-out user who adds a movie to the watchlist is asked to sign in first.
 
     Given I load the "Title Display page"
     And I am not logged in
-    And I add the movie to "My Watchlist"
+    When I add the movie to my watchlist
     Then I should be taken to the "Sign In page"
 
 
-  Scenario: Create a new IMDB account
+  Scenario Outline: Rate this movie while signed out
 
-  Create a new IMDB account and add movie to Watchlist
-
-    Given I load the "Title Display page"
-    And I am not logged in
-    And I add a movie to my watchlist
-    And I am taken to the "Sign In" page
-    And I load the new "IMDB Account" page
-    And I Click on the "<createButton>"
-    And I enter "Full Name"
-    And I enter "Email"
-    And I enter "Password"
-    And I enter "Password Confirm"
-    And I click on the "Continue Button"
-    Then my new IMDB account is created and "Movie" is added to "My Watchlist"
-
-
-  Scenario: Login with a Existing account
-
-  Complete Login with an existing IMDB account and add movie to Watchlist
+  A signed-out user who rates a movie (1 to 10 stars) is asked to sign in first.
 
     Given I load the "Title Display page"
     And I am not logged in
-    And I add a movie to my watchlist
-    And I am taken to the "Sign In" page
-    And I click on the "Sign In with IMDB" button
-    And I enter my "Email"
-    And I enter my "Password"
-    And Click on the "Sign In" button
-    Then I am successfully logged in, movie is added to "My Watchlist"
-
-
-  Scenario: Login with Amazon account
-
-  Complete the Login using an Amazon Test account and add movie to Watchlist
-
-    Given I load the "Title Display page"
-    And I am not logged in
-    And I add a movie to my watchlist
-    And I am taken to the "Sign In" page
-    And I click on the "Sign In with Amazon account" button
-    And I enter my "Email"
-    And I enter my "Password"
-    And Click on the "Sign In" button
-    Then I am successfully logged in, movie is added to "My Watchlist"
-
-
-  Scenario: Login with Facebook account
-
-  Complete the Login using a Facebook test account and add movie to Watchlist
-
-    Given I load the "Title Display page"
-    And I am not logged in
-    And I add a movie to my watchlist
-    And I am taken to the "Sign In" page
-    And I click on the "Sign In with Facebook account" button
-    And I enter my "Email"
-    And I enter my "Password"
-    And Click on the "Sign In" button
-    Then I am successfully logged in, movie is added to "My Watchlist"
-
-
-  Scenario: Login with Google Account
-
-  Complete the IMDB login using a Google Test account and add movie to Watchlist
-
-    Given I load the "Title Display page"
-    And I am not logged in
-    And I add a movie to my watchlist
-    And I am taken to the "Sign In" page
-    And I click on the "Sign In with Google account" button
-    And I enter my "Email"
-    And I click the "Next" button
-    And I enter my "Password"
-    And I clcik the "Next" button
-    And I enter the "2-Step Verification code"
-    And Click on the "Next" button
-    And click on the "Create Your IMDB account" button
-    Then IMDB account is created and movie is added to "My Watchlist"
-
-
-  Scenario Outline: Rate this movie
-
-  Rate movie as 1 star, Rate movie as 5 stars
-
-    Given I load the "<page>"
-    And I click on the "<link>"
-    And I click on "<rating>"
-    Then the movie should show a new "<rating>" rating
+    When I rate the movie <stars> stars
+    Then I should be taken to the "Sign In page"
 
     Examples:
-    | page          | link      | rating |
-    | title display | Rate This | 1 star |
-    | title display | Rate This | 5 star |
+      | stars |
+      | 1     |
+      | 10    |
 
 
-  Scenario Outline: Share this Movie on Social Media
-    Facebook, Twitter, Email, IMDB Check In, Copy Link
+  Scenario Outline: Share this movie on social media
 
-    Given I load the "<page>"
-    And I click on the "<link>" link
-    And I click on "<socialMediaLink>" pop-up
-    Then a login pop-up window is displayed to login to "<socialMedia>" and share a link to the movie
+    Given I load the "Title Display page"
+    When I open the share menu
+    Then the share menu should offer "<option>"
+    And the "<option>" option should share this movie via "<link>"
 
-  Examples:
-  | page          | link  | socialMediaLink | socialMedia    |
-  | title display | SHARE | Facebook link   | Facebook Login |
-  | title display | SHARE | Twitter link    | Twitter Login  |
-  | title display | SHARE | Email link      | Email          |
-  | title display | SHARE | IMDB Check In   | IMDB Login     |
-  | title display | SHARE | Copy Link       |                |
+    Examples:
+      | option     | link                                 |
+      | Facebook   | https://www.facebook.com/sharer.php  |
+      | Twitter    | https://twitter.com/intent/tweet     |
+      | Email link | mailto:                              |
+
+
+  Scenario: Copy a link to this movie
+
+    Given I load the "Title Display page"
+    When I open the share menu
+    And I choose "Copy link" from the share menu
+    Then I should see the message "Link copied"
+
+
+  @manual
+  Scenario: Create a new IMDB account
+
+  Create a new IMDB account and add the movie to the watchlist.
+
+    Given I load the "Title Display page"
+    And I am not logged in
+    When I add the movie to my watchlist
+    And I am taken to the "Sign In page"
+    And I click on the "Create an account" button
+    And I enter my "Full Name"
+    And I enter my "Email"
+    And I enter my "Password"
+    And I enter my "Password Confirm"
+    And I click on the "Continue" button
+    Then my new IMDB account is created and the movie is added to "My Watchlist"
+
+
+  @manual
+  Scenario: Login with an existing IMDB account
+
+  Sign in with an existing IMDB account and add the movie to the watchlist.
+
+    Given I load the "Title Display page"
+    And I am not logged in
+    When I add the movie to my watchlist
+    And I am taken to the "Sign In page"
+    And I click on the "Sign in with IMDb" button
+    And I enter my "Email"
+    And I enter my "Password"
+    And I click on the "Sign In" button
+    Then I am successfully logged in and the movie is added to "My Watchlist"
+
+
+  @manual
+  Scenario: Login with Amazon account
+
+  Sign in with an Amazon test account and add the movie to the watchlist.
+
+    Given I load the "Title Display page"
+    And I am not logged in
+    When I add the movie to my watchlist
+    And I am taken to the "Sign In page"
+    And I click on the "Sign in with Amazon" button
+    And I enter my "Email"
+    And I enter my "Password"
+    And I click on the "Sign In" button
+    Then I am successfully logged in and the movie is added to "My Watchlist"
+
+
+  @manual
+  Scenario: Login with Facebook account
+
+  Sign in with a Facebook test account and add the movie to the watchlist.
+
+    Given I load the "Title Display page"
+    And I am not logged in
+    When I add the movie to my watchlist
+    And I am taken to the "Sign In page"
+    And I click on the "Sign in with Facebook" button
+    And I enter my "Email"
+    And I enter my "Password"
+    And I click on the "Log In" button
+    Then I am successfully logged in and the movie is added to "My Watchlist"
+
+
+  @manual
+  Scenario: Login with Google account
+
+  Sign in with a Google test account and add the movie to the watchlist.
+
+    Given I load the "Title Display page"
+    And I am not logged in
+    When I add the movie to my watchlist
+    And I am taken to the "Sign In page"
+    And I click on the "Sign in with Google" button
+    And I enter my "Email"
+    And I click on the "Next" button
+    And I enter my "Password"
+    And I click on the "Next" button
+    And I enter my "2-Step Verification code"
+    And I click on the "Next" button
+    And I click on the "Create your IMDb account" button
+    Then my IMDB account is created and the movie is added to "My Watchlist"

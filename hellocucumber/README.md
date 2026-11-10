@@ -1,57 +1,70 @@
 **This is the IMDB Coding Assignment**
 
-The objective is to implement BDD using cucumber.io and selenium frameworks to test IMDB web site behavior.
-I have written the project in Java 1.8 and implemented maven to build the project and it's dependencies.
-(Please see the pom.xml file to review build dependencies)
+The objective is to implement BDD using cucumber.io and Selenium to test the IMDB website's behavior.
+The project uses Java 17, Maven, Cucumber 7, Selenium 4 and JUnit 5 (see `pom.xml`).
 
+It follows basic BDD design: feature files with Scenarios and Scenario Outlines, step definitions,
+and the Selenium Page Object Model. For class documentation see `javaDoc/index.html`.
 
-In this project I have followed basic BDD design using Feature files with Scenarios, and Scenario Outlines, along
-with Selenium PageObjectModel structure, and both JUnit & TestNG.
+**Requirements**
 
-For full documentation of Classes, Methods, DataProviders, Enums, Helper Classes, and resources please 
-refer to the JavaDoc's directory here: Project/hellocucumber/javaDoc
+    - JDK 17 or newer
+    - Maven 3.9 or newer
+    - Google Chrome (Firefox and Safari also work, see below)
 
-**How to Build the Project:**
+No chromedriver download or driver path is needed: Selenium Manager fetches a driver that
+matches your installed browser automatically.
 
-    hellocucumber (ImdbProject) is an IntelliJ project built with Maven
+**Run The Tests**
 
-**Local Configuration:**
-    propertyFilePath (dataProviders/ConfigFileReader.java) - must be configured to point to a fqp on your system 
-    configuration.properties - driverPath = driverPath= <your path to >/web_drivers/chromedriver
-                example: driverPath=/Users/christiant/tools/web_drivers/chromedriver
-                
-    
+    From the command line:
+        cd ImdbProject/hellocucumber
+        mvn test
 
-**Key Files:**
-    
-    Feature Files: 
-        1. top_rated_movies.feature  (_implemented_)
-        2. title_display_page.feature
-        
-    Step Definitions:
-        1. ImdbStepDefs.java
-        2. TitleDisplaySTepDefs.java
-    
-    Test Runner:
-        1. RunImdbTests.java (package imdbTests)
+    Options (any key in configuration.properties can be overridden with -D):
+        mvn test -Dheadless=true          run without a visible browser window
+        mvn test -Dbrowser=firefox        use Firefox (or safari)
+        mvn test -DtitleId=tt0068646      use a different movie for title_display_page.feature
 
-  
+    From the IDE (IntelliJ):
+        1. Open the hellocucumber project (pom.xml)
+        2. Run imdbTests/RunImdbTests, or right-click a .feature file and choose Run
 
+    Report: target/cucumber-reports/imdb.html. Failed scenarios include a screenshot and the URL.
 
-**Run The Tests:**
+**IMDB's "confirm you are human" check**
 
-    From command line:  
-        1. Open a terminal or CMD
-        2. Navigate to project direcotry
-           
-           Example: cd /IdeaProjects/ImdbProject/hellocucumber
-        
-        3. run: mvn test
-    
-    From the IDE:  
-        1. Open your IDE (IntelliJ)
-        2. Import the ImdbProject
-        3. Navigate to the Feature files --> /hellocucumber/src/test/resources/imdbTests
-        4. Open "top_rated_movies.feature" file
-        5. Rigth-Click on the line with "Feature: Top Rated Movies"
-        6. In the pop-up menu select: "Run 'Feature: Top Rated Movies'
+IMDB sometimes shows an Amazon CAPTCHA to automated browsers. When that happens the run prints a
+message and waits (up to `captchaWaitSeconds`, default 180) for you to solve it in the Chrome window.
+Chrome uses its own profile in `chrome-profile/` (not in git), so once solved the check usually
+stays passed for the rest of the run and for later runs. Headless runs can't show the CAPTCHA;
+if it appears they stop with an explanation. Run once with a visible browser first.
+
+**Key Files**
+
+    Feature files (src/test/resources/imdbTests):
+        top_rated_movies.feature      genre filter and release-date sorting on the Top 250 chart
+        title_display_page.feature    watchlist, rating and sharing on a movie's page
+
+    Step definitions (src/test/java/imdbTests):
+        CommonSteps.java              page loading, signed-out check, "taken to page" check
+        ImdbStepdefs.java             Top 250 steps
+        TitleDisplayStepDefs.java     title page steps
+        Hooks.java                    screenshot on failure and closing the browser
+
+    Page objects (src/test/java/pageObjects):
+        TopRatedPage, GenreSearchResultsPage, TitlePage, SignInPage (all extend BasePage)
+
+    Test runners:
+        imdbTests/RunImdbTests.java         the IMDB features
+        hellocucumber/RunCucumberTest.java  the Cucumber "Is it Friday yet?" tutorial
+
+    Configuration:
+        src/test/resources/configuration.properties   browser, URL, waits, movie, profile folder
+        src/test/resources/junit-platform.properties  skips scenarios tagged @manual
+
+**Manual scenarios**
+
+Scenarios that need real IMDB, Amazon, Facebook or Google accounts (creating an account and
+signing in) are tagged `@manual`. They document the expected behavior but are not automated,
+because they need real credentials and run into CAPTCHAs and 2-step verification.

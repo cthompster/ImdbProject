@@ -1,78 +1,114 @@
 package dataProviders;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.nio.file.Path;
+import java.time.Duration;
+import java.util.Locale;
 import java.util.Properties;
 
 import enums.DriverType;
 import enums.EnvironmentType;
 
+/**
+ * Reads {@code configuration.properties} from the test classpath.
+ * A JVM system property with the same key (e.g. {@code -Dbrowser=firefox}) overrides the file.
+ */
 public class ConfigFileReader {
-    private Properties properties;
-    private final String propertyFilePath= "../hellocucumber/src/test/resources/configuration.properties";
+    private static final String RESOURCE = "configuration.properties";
+    private final Properties properties = new Properties();
 
-    public ConfigFileReader(){
-        BufferedReader reader;
+    public ConfigFileReader() {
+        try (InputStream in = ConfigFileReader.class.getClassLoader().getResourceAsStream(RESOURCE)) {
+            if (in == null) {
+                throw new IllegalStateException(RESOURCE + " was not found on the test classpath");
+            }
+            properties.load(in);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Could not read " + RESOURCE, e);
+        }
+    }
+
+    private String get(String key) {
+        String value = System.getProperty(key);
+        if (value == null || value.isBlank()) {
+            value = properties.getProperty(key);
+        }
+        return (value == null || value.isBlank()) ? null : value.trim();
+    }
+
+    private String required(String key) {
+        String value = get(key);
+        if (value == null) {
+            throw new IllegalStateException("'" + key + "' is not set in " + RESOURCE + " or as -D" + key);
+        }
+        return value;
+    }
+
+    private long getLong(String key, long defaultValue) {
+        String value = get(key);
+        if (value == null) return defaultValue;
         try {
-            reader = new BufferedReader(new FileReader(propertyFilePath));
-            properties = new Properties();
-            try {
-                properties.load(reader);
-                reader.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Configuration.properties not found at " + propertyFilePath);
+            return Long.parseLong(value);
+        } catch (NumberFormatException e) {
+            throw new IllegalStateException("'" + key + "' must be a whole number but was: " + value, e);
         }
     }
 
-    public String getDriverPath(){
-        String driverPath = properties.getProperty("driverPath");
-        if(driverPath!= null) return driverPath;
-        else throw new RuntimeException("Driver Path not specified in the Configuration.properties file for the Key:driverPath");
-    }
-
-    public long getImplicitlyWait() {
-        String implicitlyWait = properties.getProperty("implicitlyWait");
-        if(implicitlyWait != null) {
-            try{
-                return Long.parseLong(implicitlyWait);
-            }catch(NumberFormatException e) {
-                throw new RuntimeException("Not able to parse value : " + implicitlyWait + " in to Long");
-            }
-        }
-        return 30;
+    private boolean getBoolean(String key, boolean defaultValue) {
+        String value = get(key);
+        return value == null ? defaultValue : Boolean.parseBoolean(value);
     }
 
     public String getApplicationUrl() {
-        String url = properties.getProperty("url");
-        if(url != null) return url;
-        else throw new RuntimeException("Application Url not specified in the Configuration.properties file for the Key:url");
+        String url = required("url");
+        return url.endsWith("/") ? url.substring(0, url.length() - 1) : url;
     }
 
     public DriverType getBrowser() {
-        String browserName = properties.getProperty("browser");
-        if(browserName == null || browserName.equals("chrome")) return DriverType.CHROME;
-        else if(browserName.equalsIgnoreCase("firefox")) return DriverType.FIREFOX;
-        else if(browserName.equals("safari")) return DriverType.SAFARI;
-        else throw new RuntimeException("Browser Name Key value in Configuration.properties is not matched : " + browserName);
+        String browser = get("browser");
+        if (browser == null) return DriverType.CHROME;
+        try {
+            return DriverType.valueOf(browser.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException("Unsupported browser '" + browser + "'. Use chrome, firefox or safari.", e);
+        }
     }
 
     public EnvironmentType getEnvironment() {
-        String environmentName = properties.getProperty("environment");
-        if(environmentName == null || environmentName.equalsIgnoreCase("local")) return EnvironmentType.LOCAL;
-        else if(environmentName.equals("remote")) return EnvironmentType.REMOTE;
-        else throw new RuntimeException("Environment Type Key value in Configuration.properties is not matched : " + environmentName);
+        String environment = get("environment");
+        if (environment == null) return EnvironmentType.LOCAL;
+        try {
+            return EnvironmentType.valueOf(environment.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException("Unsupported environment '" + environment + "'. Use local or remote.", e);
+        }
     }
 
-    public Boolean getBrowserWindowSize() {
-        String windowSize = properties.getProperty("windowMaximize");
-        if(windowSize != null) return Boolean.valueOf(windowSize);
-        return true;
+    public boolean isHeadless() {
+        return getBoolean("headless", false);
     }
 
+    public boolean isWindowMaximize() {
+        return getBoolean("windowMaximize", true);
+    }
+
+    public Duration getExplicitWait() {
+        return Duration.ofSeconds(getLong("explicitWait", 15));
+    }
+
+    public Duration getCaptchaWait() {
+        return Duration.ofSeconds(getLong("captchaWaitSeconds", 180));
+    }
+
+    public String getTitleId() {
+        return required("titleId");
+    }
+
+    /** Absolute path of the Chrome profile directory, or {@code null} to use a throwaway profile. */
+    public Path getChromeProfileDir() {
+        String dir = get("chromeProfileDir");
+        return dir == null ? null : Path.of(dir).toAbsolutePath();
+    }
 }

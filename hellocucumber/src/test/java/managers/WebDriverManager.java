@@ -1,68 +1,99 @@
 package managers;
 
-import java.util.concurrent.TimeUnit;
+import java.nio.file.Path;
+import java.time.Duration;
 
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
-import enums.DriverType;
-import enums.EnvironmentType;
+import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.safari.SafariDriver;
 
-public class WebDriverManager {
-    private WebDriver driver;
-    private static DriverType driverType;
-    private static EnvironmentType environmentType;
-    private static final String CHROME_DRIVER_PROPERTY = "webdriver.chrome.driver";
+import dataProviders.ConfigFileReader;
 
-    public WebDriverManager() {
-        driverType = FileReaderManager.getInstance().getConfigReader().getBrowser();
-        environmentType = FileReaderManager.getInstance().getConfigReader().getEnvironment();
-    }
+/**
+ * Creates and disposes of the browser for one scenario. Selenium Manager (built into Selenium 4)
+ * downloads a driver that matches the installed browser, so no driver path is configured.
+ */
+public class WebDriverManager {
+    private final ConfigFileReader config = FileReaderManager.getInstance().getConfigReader();
+    private WebDriver driver;
 
     public WebDriver getDriver() {
-        if(driver == null) driver = createDriver();
+        if (driver == null) {
+            driver = createDriver();
+        }
         return driver;
+    }
+
+    public boolean hasDriver() {
+        return driver != null;
     }
 
     private WebDriver createDriver() {
-        switch (environmentType) {
-            case LOCAL : driver = createLocalDriver();
-                break;
-            case REMOTE : driver = createRemoteDriver();
-                break;
+        switch (config.getEnvironment()) {
+            case LOCAL:
+                return createLocalDriver();
+            case REMOTE:
+            default:
+                throw new UnsupportedOperationException("RemoteWebDriver is not yet implemented");
         }
-        return driver;
-    }
-
-    private WebDriver createRemoteDriver() {
-        throw new RuntimeException("RemoteWebDriver is not yet implemented");
     }
 
     private WebDriver createLocalDriver() {
-        switch (driverType) {
-            case FIREFOX : driver = new FirefoxDriver();
+        WebDriver newDriver;
+        switch (config.getBrowser()) {
+            case FIREFOX:
+                newDriver = new FirefoxDriver(firefoxOptions());
                 break;
-            case CHROME :
-                System.setProperty(CHROME_DRIVER_PROPERTY, FileReaderManager.getInstance().getConfigReader().getDriverPath());
-                ChromeOptions options = new ChromeOptions();
-                options.addArguments("--disable-notifications");
-                options.addArguments("--start-maximized");
-                options.addArguments("disable-infobars");
-                driver = new ChromeDriver(options);
+            case SAFARI:
+                newDriver = new SafariDriver();
                 break;
-            case SAFARI: driver = new SafariDriver();
+            case CHROME:
+            default:
+                newDriver = new ChromeDriver(chromeOptions());
                 break;
         }
-
-        if(FileReaderManager.getInstance().getConfigReader().getBrowserWindowSize()) driver.manage().window().maximize();
-        driver.manage().timeouts().implicitlyWait(FileReaderManager.getInstance().getConfigReader().getImplicitlyWait(), TimeUnit.SECONDS);
-        return driver;
+        if (config.isWindowMaximize() && !config.isHeadless()) {
+            newDriver.manage().window().maximize();
+        }
+        // Page objects use explicit waits; mixing them with implicit waits causes unpredictable timeouts.
+        newDriver.manage().timeouts().implicitlyWait(Duration.ZERO);
+        return newDriver;
     }
 
-    public void closeDriver() {
-        driver.close();
-        driver.quit();
+    private ChromeOptions chromeOptions() {
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--disable-notifications", "--lang=en-US", "--window-size=1400,1000");
+        Path profile = config.getChromeProfileDir();
+        if (profile != null) {
+            // Reusing one profile keeps IMDB's human-verification cookie between scenarios.
+            options.addArguments("--user-data-dir=" + profile);
+        }
+        if (config.isHeadless()) {
+            options.addArguments("--headless=new");
+        }
+        return options;
+    }
+
+    private FirefoxOptions firefoxOptions() {
+        FirefoxOptions options = new FirefoxOptions();
+        options.addPreference("intl.accept_languages", "en-US");
+        if (config.isHeadless()) {
+            options.addArguments("-headless");
+        }
+        return options;
+    }
+
+    /** Quits the browser if one was started. Safe to call more than once. */
+    public void quitDriver() {
+        if (driver != null) {
+            try {
+                driver.quit();
+            } finally {
+                driver = null;
+            }
+        }
     }
 }

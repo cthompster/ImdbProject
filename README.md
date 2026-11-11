@@ -74,7 +74,7 @@ so run with a visible browser.
 
 **In the terminal**, Maven prints a summary at the end of the run:
 ```
-[INFO] Tests run: 30, Failures: 0, Errors: 0, Skipped: 5
+[INFO] Tests run: 38, Failures: 0, Errors: 0, Skipped: 5
 [INFO] BUILD SUCCESS
 ```
 "Skipped" counts the `@manual` scenarios.

@@ -151,7 +151,7 @@ Feature: Title Display Page
 
 
   @manual
-  Scenario: Login with an existing IMDB account
+  Scenario: Login with an existing IMDb account
 
   Sign in with an existing IMDb account and add the movie to the watchlist.
 

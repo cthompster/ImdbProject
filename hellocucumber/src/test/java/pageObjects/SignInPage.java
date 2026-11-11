@@ -95,10 +95,11 @@ public class SignInPage extends BasePage {
     public void choose(String option) {
         Set<String> windowsBefore = driver.getWindowHandles();
         By locator = optionLocator(option);
-        WebElement chosen = visible(locator);
         click(locator);
+        // Checks the locator rather than the clicked element, so a re-render just before the click can't count as
+        // the option having gone.
         waitFor(d -> d.getWindowHandles().size() > windowsBefore.size() || !d.getCurrentUrl().contains(path())
-                || isGone(chosen));
+                || isGone(d, locator));
         driver.getWindowHandles().stream()
                 .filter(h -> !windowsBefore.contains(h))
                 .findFirst()
@@ -110,23 +111,24 @@ public class SignInPage extends BasePage {
      * path is {@code pathPrefix} or lies under it (empty for any path). Only the address is checked: Amazon's
      * sign-in page may refuse automated browsers, so its content isn't reliable. Returns false on timeout.
      * <p>
-     * IMDb's own destinations go through the usual 403 and CAPTCHA handling, so a CAPTCHA shown at the expected
-     * address is waited for (and must be solved by a person) instead of counting as having reached the page.
-     * Other sites get a plain wait, because IMDb's CAPTCHA handling doesn't apply to them.
+     * IMDb's own destinations then go through the usual 403 and CAPTCHA handling, so a CAPTCHA detected there is
+     * waited for (a person must solve it), and an unsolved one fails with its own message rather than as a wrong
+     * address. Other sites get a plain wait, because IMDb's CAPTCHA handling doesn't apply to them.
      */
     public boolean waitForSecureDestination(String host, String pathPrefix) {
         Function<WebDriver, Boolean> reached = d -> isSecureDestination(d.getCurrentUrl(), host, pathPrefix);
+        boolean onImdb = isHostOrSubdomain(host.toLowerCase(Locale.ROOT), IMDB_HOST);
         try {
-            if (isHostOrSubdomain(host.toLowerCase(Locale.ROOT), IMDB_HOST)) {
+            if (onImdb) {
                 waitFor(reached);
-                afterNavigation();
             } else {
                 wait.until(reached);
             }
-            return true;
         } catch (TimeoutException e) {
             return false;
         }
+        if (onImdb) afterNavigation();
+        return true;
     }
 
     private static boolean isSecureDestination(String url, String host, String pathPrefix) {
@@ -143,11 +145,12 @@ public class SignInPage extends BasePage {
         }
     }
 
-    private static boolean isGone(WebElement element) {
+    /** True when no element matching {@code locator} is displayed; retries on the next poll if the page is changing. */
+    private static boolean isGone(WebDriver driver, By locator) {
         try {
-            return !element.isDisplayed();
+            return driver.findElements(locator).stream().noneMatch(WebElement::isDisplayed);
         } catch (StaleElementReferenceException e) {
-            return true;
+            return false;
         }
     }
 

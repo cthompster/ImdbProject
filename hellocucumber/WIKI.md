@@ -32,6 +32,8 @@ The movie is set in configuration (default: *The Shawshank Redemption*, `tt01111
 |----------|----------------|
 | Add to Watchlist | A signed-out visitor is sent to the sign-in page |
 | Rate the movie (1 and 10 stars) | A signed-out visitor is sent to the sign-in page |
+| The sign-in page leads to creating an account | From the watchlist, the sign-in page offers *Create an account*, which reaches Amazon's sign-in page (`https://` on `amazon.com/ap/signin`). Only the address is checked; nothing is typed or submitted |
+| The sign-in page leads to the chosen way of signing in | *Sign in to an existing account* reveals *Sign in with* Amazon, IMDb, Google and Apple; each reaches an `https://` address on the expected host (`amazon.com/ap/signin`, `imdb.com/ap/signin`, `accounts.google.com`, `appleid.apple.com`). Only the address is checked; nothing is typed or submitted |
 | Share on social media | The share menu offers Facebook, Twitter and Email, each linking to this movie |
 | Copy a link | Choosing *Copy link* shows the message "Link copied" |
 | Name, release year and rating | The heading matches the browser tab, the year is plausible and the IMDb rating is 1 to 10 |
@@ -43,7 +45,7 @@ Security and performance checks are passive: they only look at what a normal vis
 
 ### Manual scenarios
 
-Creating an account and signing in with IMDb, Amazon, Facebook or Google need real accounts, CAPTCHAs and 2-step verification. They are kept in the feature file as documentation, tagged `@manual`, and skipped in automated runs.
+Creating an account and signing in with IMDb, Amazon, Google or Apple need real accounts, CAPTCHAs and 2-step verification. They are kept in the feature file as documentation, tagged `@manual`, and skipped in automated runs. Their signed-out part (reaching the sign-in page and following each option to the expected site) is automated in *The sign-in page leads to creating an account* and *The sign-in page leads to the chosen way of signing in*.
 
 The project also contains Cucumber's "Is it Friday yet?" tutorial (8 scenarios) as a simple example.
 
@@ -84,7 +86,7 @@ The report is written to `target/cucumber-reports/imdb.html`. Failed scenarios i
 
 ## Current status
 
-As of 11 November 2026, all 20 automated IMDb scenarios and all 8 tutorial scenarios pass against the live site; the 5 `@manual` scenarios are skipped.
+As of 11 November 2026, all 25 automated IMDb scenarios and all 8 tutorial scenarios pass against the live site; the 5 `@manual` scenarios are skipped. The sign-in scenarios follow IMDb's current sign-in page (Facebook is no longer offered; Apple is new).
 
 ## See also
 

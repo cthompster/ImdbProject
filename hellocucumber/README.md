@@ -49,13 +49,15 @@ for every page the suite uses. The run then stops right away with an explanation
         top_rated_movies.feature      genre filter, release-date and rating sorting, ranking order,
                                       HTTPS and load time on the Top 250 chart
         title_display_page.feature    watchlist, rating and sharing; name, year and rating shown;
-                                      screen-reader checks, HTTPS and load time on a movie's page
+                                      screen-reader checks, HTTPS and load time on a movie's page;
+                                      where the sign-in page's options lead
 
     Step definitions (src/test/java/imdbTests):
         CommonSteps.java              page loading, signed-out and "taken to page" checks,
                                       HTTPS, mixed-content and load-time checks
         ImdbStepdefs.java             Top 250 steps
         TitleDisplayStepDefs.java     title page steps
+        SignInStepDefs.java           sign-in page options and where they lead
         Hooks.java                    screenshot on failure and closing the browser
 
     Page objects (src/test/java/pageObjects):
@@ -72,6 +74,8 @@ for every page the suite uses. The run then stops right away with an explanation
 
 **Manual scenarios**
 
-Scenarios that need real IMDB, Amazon, Facebook or Google accounts (creating an account and
+Scenarios that need real IMDb, Amazon, Google or Apple accounts (creating an account and
 signing in) are tagged `@manual`. They document the expected behavior but are not automated,
 because they need real credentials and run into CAPTCHAs and 2-step verification.
+Their signed-out part is automated: the sign-in page offers each option, and following it reaches
+the expected site over HTTPS (checked by address only). No credentials are entered and no form is submitted.

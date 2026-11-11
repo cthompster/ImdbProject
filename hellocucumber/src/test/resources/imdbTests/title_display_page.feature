@@ -4,7 +4,7 @@ Feature: Title Display Page
   Users can rate it, add it to their watchlist and share it. The movie comes from
   "titleId" in configuration.properties.
 
-  Scenarios tagged @manual need real IMDB, Amazon, Facebook or Google accounts, and
+  Scenarios tagged @manual need real IMDb, Amazon, Google or Apple accounts, and
   they hit CAPTCHAs and 2-step verification. They document the expected behavior and
   are run by hand. Automated runs skip them (see junit-platform.properties).
 
@@ -96,37 +96,75 @@ Feature: Title Display Page
     Then the page should be ready within 10 seconds
 
 
-  @manual
-  Scenario: Create a new IMDB account
+  Scenario: The sign-in page leads to creating an account
 
-  Create a new IMDB account and add the movie to the watchlist.
+  The signed-out part of the @manual "Create a new account" scenario below: the sign-in page that a
+  signed-out user reaches from the watchlist offers to create an account, which opens Amazon's sign-in
+  page over HTTPS. Only the address is checked; nothing is typed and no form is submitted.
+
+    Given I load the "Title Display page"
+    And I am not logged in
+    When I add the movie to my watchlist
+    Then I should be taken to the "Sign In page"
+    And the Sign In page should offer "Create an account"
+    When I choose "Create an account" on the Sign In page
+    Then I should be taken to an HTTPS page on "amazon.com/ap/signin"
+
+
+  Scenario Outline: The sign-in page leads to the chosen way of signing in
+
+  The signed-out part of the @manual sign-in scenarios below: choosing "Sign in to an existing account"
+  reveals the ways to sign in, and each opens its provider's page over HTTPS. Only the address is
+  checked, because these pages may refuse automated browsers. Nothing is typed and no form is submitted.
+
+    Given I load the "Title Display page"
+    And I am not logged in
+    When I add the movie to my watchlist
+    Then I should be taken to the "Sign In page"
+    When I choose "Sign in to an existing account" on the Sign In page
+    Then the Sign In page should offer "<option>"
+    When I choose "<option>" on the Sign In page
+    Then I should be taken to an HTTPS page on "<destination>"
+
+    Examples:
+      | option              | destination          |
+      | Sign in with Amazon | amazon.com/ap/signin |
+      | Sign in with IMDb   | imdb.com/ap/signin   |
+      | Sign in with Google | accounts.google.com  |
+      | Sign in with Apple  | appleid.apple.com    |
+
+
+  @manual
+  Scenario: Create a new account
+
+  Create a new account and add the movie to the watchlist. Account creation happens on Amazon's pages.
 
     Given I load the "Title Display page"
     And I am not logged in
     When I add the movie to my watchlist
     And I am taken to the "Sign In page"
     And I click on the "Create an account" button
-    And I enter my "Full Name"
-    And I enter my "Email"
-    And I enter my "Password"
-    And I enter my "Password Confirm"
-    And I click on the "Continue" button
-    Then my new IMDB account is created and the movie is added to "My Watchlist"
+    And I am taken to Amazon's sign-in page
+    And I create a new account by following the steps on Amazon's pages
+    And I complete any CAPTCHA or verification code it asks for
+    Then I am returned to IMDb signed in, and the movie is added to "My Watchlist"
 
 
   @manual
   Scenario: Login with an existing IMDB account
 
-  Sign in with an existing IMDB account and add the movie to the watchlist.
+  Sign in with an existing IMDb account and add the movie to the watchlist.
 
     Given I load the "Title Display page"
     And I am not logged in
     When I add the movie to my watchlist
     And I am taken to the "Sign In page"
+    And I click on the "Sign in to an existing account" button
     And I click on the "Sign in with IMDb" button
     And I enter my "Email"
     And I enter my "Password"
     And I click on the "Sign In" button
+    And I complete any CAPTCHA or 2-step verification it asks for
     Then I am successfully logged in and the movie is added to "My Watchlist"
 
 
@@ -139,26 +177,13 @@ Feature: Title Display Page
     And I am not logged in
     When I add the movie to my watchlist
     And I am taken to the "Sign In page"
+    And I click on the "Sign in to an existing account" button
     And I click on the "Sign in with Amazon" button
-    And I enter my "Email"
+    And I enter my "Email or mobile phone number"
+    And I click on the "Continue" button
     And I enter my "Password"
     And I click on the "Sign In" button
-    Then I am successfully logged in and the movie is added to "My Watchlist"
-
-
-  @manual
-  Scenario: Login with Facebook account
-
-  Sign in with a Facebook test account and add the movie to the watchlist.
-
-    Given I load the "Title Display page"
-    And I am not logged in
-    When I add the movie to my watchlist
-    And I am taken to the "Sign In page"
-    And I click on the "Sign in with Facebook" button
-    And I enter my "Email"
-    And I enter my "Password"
-    And I click on the "Log In" button
+    And I complete any CAPTCHA or 2-step verification it asks for
     Then I am successfully logged in and the movie is added to "My Watchlist"
 
 
@@ -171,12 +196,28 @@ Feature: Title Display Page
     And I am not logged in
     When I add the movie to my watchlist
     And I am taken to the "Sign In page"
+    And I click on the "Sign in to an existing account" button
     And I click on the "Sign in with Google" button
     And I enter my "Email"
     And I click on the "Next" button
     And I enter my "Password"
     And I click on the "Next" button
-    And I enter my "2-Step Verification code"
-    And I click on the "Next" button
-    And I click on the "Create your IMDb account" button
-    Then my IMDB account is created and the movie is added to "My Watchlist"
+    And I complete any 2-step verification Google asks for
+    Then I am successfully logged in and the movie is added to "My Watchlist"
+
+
+  @manual
+  Scenario: Login with Apple account
+
+  Sign in with an Apple test account and add the movie to the watchlist.
+
+    Given I load the "Title Display page"
+    And I am not logged in
+    When I add the movie to my watchlist
+    And I am taken to the "Sign In page"
+    And I click on the "Sign in to an existing account" button
+    And I click on the "Sign in with Apple" button
+    And I enter my "Apple Account" email or phone number
+    And I enter my "Password"
+    And I complete any 2-step verification Apple asks for
+    Then I am successfully logged in and the movie is added to "My Watchlist"

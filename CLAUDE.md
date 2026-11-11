@@ -1,0 +1,92 @@
+# CLAUDE.md
+
+Guidance for Claude Code in this repository. Human-facing docs: `README.md`, `hellocucumber/README.md`
+and `hellocucumber/WIKI.md` (the WIKI holds the scenario tables and the current pass/fail status).
+
+## What this is
+
+A Java 17 + Maven BDD suite in `hellocucumber/` that tests the **live IMDb site** with Cucumber 7,
+Selenium 4 and JUnit 5. It also contains Cucumber's "Is it Friday yet?" tutorial (8 scenarios).
+
+## Running the tests
+
+All Maven commands run from `hellocucumber/`:
+
+| Command | What it does |
+|---|---|
+| `mvn test` | Full suite. Opens a visible Chrome against live IMDb; about 2 minutes. Run it in the background. |
+| `mvn test -Dtest=RunImdbTests "-Dcucumber.filter.name=<regex>"` | Only some scenarios. The regex must match the **whole** scenario name: `"The sign-in page leads.*"` works, a bare prefix silently skips everything. |
+| `mvn -q test-compile` | Compile only (`-Xlint:all -Werror`, so warnings fail the build). |
+| `mvn -q test -Dcucumber.execution.dry-run=true` | No browser: checks every step is defined. |
+
+- Report: `hellocucumber/target/cucumber-reports/imdb.html`. Every run, including dry and filtered
+  runs, **overwrites** it; do a full run to get a complete report. Failure screenshots are embedded in
+  it as base64 PNGs.
+- Expected result today: 25 IMDb scenarios pass, 5 `@manual` skipped, 8 tutorial scenarios pass
+  (Maven's final line: `Tests run: 38, Failures: 0, Errors: 0, Skipped: 5`).
+- Any key in `src/test/resources/configuration.properties` can be overridden with `-D`
+  (e.g. `-Dbrowser=firefox`, `-DtitleId=tt0068646`).
+- Don't run the live suite repeatedly: each run can trigger CAPTCHAs (see below). Prefer compile and
+  dry runs while iterating, then one live run.
+
+## IMDb bot protection: hard rules
+
+- IMDb's AWS WAF may show a "confirm you are human" CAPTCHA. The suite waits (up to 180 s) for **a
+  person** to solve it in the browser window. When starting a live run, tell the user to watch for it.
+  The pass is kept in `hellocucumber/chrome-profile/`, which must stay git-ignored.
+- **Never** add code that bypasses or evades bot protection: no stealth flags, user-agent spoofing,
+  CAPTCHA solvers or similar. IMDb's terms prohibit robots.
+- Headless runs get "403 Forbidden" on every page and fail fast by design.
+- If every scenario hits a CAPTCHA, IMDb is throttling: suggest waiting a few hours instead of retrying.
+- **Never** enter credentials, create accounts or submit sign-in/registration forms in automation.
+  Account flows are `@manual` scenarios; only their signed-out part is automated (follow a sign-in
+  option and check the HTTPS address it reaches).
+- Security and performance checks stay passive (what a normal visitor's browser receives). No load
+  or attack testing against IMDb.
+
+## Layout (`hellocucumber/src/test/`)
+
+- `resources/imdbTests/*.feature`: scenarios. `@manual` ones are skipped via `junit-platform.properties`
+  (Maven, `RunImdbTests`) and `cucumber.properties` (IntelliJ right-click Run); keep the two in step.
+- `java/imdbTests/`: step definitions (`CommonSteps`, `ImdbStepdefs`, `TitleDisplayStepDefs`,
+  `SignInStepDefs`), `Hooks` (screenshot on failure, always quit the browser), `TestContext`
+  (PicoContainer-injected per scenario), `RunImdbTests`.
+- `java/pageObjects/`: `BasePage` (explicit waits, CAPTCHA and 403 handling, click/scroll helpers) and
+  one class per page. Selectors live only here.
+- `java/managers/`: `WebDriverManager` (browser start, Chrome profile, cookie reset),
+  `PageObjectManager`, `FileReaderManager`.
+- `java/enums/PageName`: the page names used in feature files (`"Title Display page"`, ...). A new page
+  needs an entry here and in `PageObjectManager`.
+- `java/hellocucumber/`: the tutorial.
+
+## Conventions and intentional choices
+
+- Implicit wait is 0. Wait explicitly with `BasePage.waitFor` / `visible` / `click`, which also handle a
+  CAPTCHA that appears late. After anything that loads a new IMDb page, call `afterNavigation()`.
+- Pages off IMDb (Amazon, Google, Apple) use a plain `wait.until`; IMDb's CAPTCHA handling doesn't apply.
+- Prefer `data-testid`, `id` or ARIA selectors over IMDb's hashed `sc-…` classes. Don't assert on live
+  data that changes (exact counts, titles other than the configured movie).
+- `PageLoadStrategy.EAGER`; IMDb's hidden `<select>` is set through JavaScript; rating stars are
+  clicked with `Actions`. These are deliberate, not bugs.
+- Use `Locale.ROOT` for case conversion.
+- When a scenario changes, update the READMEs and the WIKI (scenario table and status line) to match.
+
+## Agents
+
+Project subagents in `.claude/agents/`:
+
+- `test-writer`: designs and writes scenarios, step definitions and page objects.
+- `imdb-code-reviewer`: read-only reviewer that knows the choices above. Prefer it over a general
+  code reviewer here. Its report ends with an approval status. After editing any file in
+  `.claude/agents/`, check that the agent still loads: settings only between the `---` lines.
+
+## Git workflow
+
+The user works one change at a time and asks for each step:
+new branch from `master` → commit → push and open a PR (`gh pr create`) → merge with a merge commit
+(`gh pr merge --merge`) → switch to `master` and delete the branch locally and on GitHub.
+
+- Never commit to `master` directly, and don't commit, push, merge or delete until asked. After each
+  step, offer the next one.
+- PR descriptions: a short summary or table of the changes, plus the test result.
+- `.idea/workspace.xml` and `.idea/libraries/` are untracked on purpose.

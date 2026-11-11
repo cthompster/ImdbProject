@@ -80,6 +80,11 @@ Project subagents in `.claude/agents/`:
   code reviewer here. Its report ends with an approval status. After editing any file in
   `.claude/agents/`, check that the agent still loads: settings only between the `---` lines.
 
+Project skills in `.claude/skills/`:
+
+- `codebase-onboarding` (`/codebase-onboarding [topic]`): read-only guided tour or Q&A for developers
+  new to the code. It traces real scenarios through the layers and doesn't run the tests.
+
 ## Git workflow
 
 The user works one change at a time and asks for each step:

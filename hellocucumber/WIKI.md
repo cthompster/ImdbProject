@@ -19,10 +19,10 @@ The suite lives in the `hellocucumber` folder. Plain-English feature files descr
 |----------|----------------|
 | Refining the list by genre | Choosing *Comedy*, *Action* or *Drama* opens IMDb's search filtered by that genre, and it returns titles |
 | Sorting by release date | After sorting by release date, ascending or descending, all 250 movies are listed in that order of release year |
-| Sorting by IMDb rating | After sorting by IMDb rating, highest first, every rating is 1 to 10 and none is higher than the one above it |
+| Sorting by IMDb rating | After sorting by IMDb rating, lowest first, every rating is 1 to 10 and none is lower than the one above it (ascending, because the default ranking is already close to highest-first) |
 | Numbered in ranking order | The rank badges run #1, #2, ... up to the total shown above the list |
-| Served only over HTTPS | The plain `http://` address redirects to HTTPS, and nothing on the page loads over plain HTTP |
-| Loads within a reasonable time | The page is ready (DOMContentLoaded) within 10 seconds; timings are printed on each run |
+| Served only over HTTPS | Opening the plain `http://` address ends up on HTTPS (Chrome may upgrade it itself), and nothing on the page loads over plain HTTP, including `srcset` images |
+| Loads within a reasonable time | The page is ready (DOMContentLoaded) within 10 seconds; timings are printed on each run (skipped if a CAPTCHA was shown) |
 
 ### Movie title page (`title_display_page.feature`)
 
@@ -36,8 +36,8 @@ The movie is set in configuration (default: *The Shawshank Redemption*, `tt01111
 | Copy a link | Choosing *Copy link* shows the message "Link copied" |
 | Name, release year and rating | The heading matches the browser tab, the year is plausible and the IMDb rating is 1 to 10 |
 | Usable with a screen reader | One main heading, a declared page language, accessible names on Add to Watchlist, Rate and Share, and alt text on the poster |
-| Served only over HTTPS | The plain `http://` address redirects to HTTPS, and nothing on the page loads over plain HTTP |
-| Loads within a reasonable time | The page is ready (DOMContentLoaded) within 10 seconds; timings are printed on each run |
+| Served only over HTTPS | Opening the plain `http://` address ends up on HTTPS (Chrome may upgrade it itself), and nothing on the page loads over plain HTTP, including `srcset` images |
+| Loads within a reasonable time | The page is ready (DOMContentLoaded) within 10 seconds; timings are printed on each run (skipped if a CAPTCHA was shown) |
 
 Security and performance checks are passive: they only look at what a normal visitor's browser receives. There is no load testing or attack testing against IMDb.
 

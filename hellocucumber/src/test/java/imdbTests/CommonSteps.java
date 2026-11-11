@@ -41,12 +41,12 @@ public class CommonSteps {
         currentPage.loadOverPlainHttp();
     }
 
-    @Then("the browser should be redirected to the page's HTTPS address")
-    public void theBrowserShouldBeRedirectedToHttps() {
+    @Then("the browser should end up on the page's HTTPS address")
+    public void theBrowserShouldEndUpOnHttps() {
         BasePage page = currentPage();
         assertTrue(page.isCurrent(), () -> "Expected to stay on the requested page, but the browser is on " + page.getCurrentUrl());
         String url = page.getCurrentUrl();
-        assertTrue(url.startsWith("https://"), () -> "Expected an https:// address after the redirect, but the browser is on " + url);
+        assertTrue(url.startsWith("https://"), () -> "Expected to end up on an https:// address, but the browser is on " + url);
     }
 
     @Then("the page should not load any content over plain HTTP")
@@ -58,6 +58,11 @@ public class CommonSteps {
     @Then("the page should be ready within {int} seconds")
     public void thePageShouldBeReadyWithin(int seconds) {
         BasePage page = currentPage();
+        if (page.wasCaptchaShownDuringLoad()) {
+            // The timing data may describe the CAPTCHA page, and the wait for a person isn't page speed.
+            System.out.println("Page timings for " + page.getCurrentUrl() + " skipped: IMDB showed a CAPTCHA during the load.");
+            return;
+        }
         Map<String, Long> timings = page.getNavigationTimings();
         long domContentLoaded = timings.get("domContentLoaded");
         // Printed on every run so timings can be compared between runs; only a large slowdown fails.

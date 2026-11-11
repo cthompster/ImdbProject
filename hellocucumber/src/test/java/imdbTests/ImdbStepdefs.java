@@ -46,8 +46,7 @@ public class ImdbStepdefs {
 
     @When("I sort the list by {string} in {word} order")
     public void iSortTheListBy(String field, String order) {
-        topRatedPage.sortBy(field);
-        topRatedPage.setSortOrder(SortOrder.fromText(order));
+        topRatedPage.sortBy(field, SortOrder.fromText(order));
     }
 
     @Then("all {int} movies should be listed in {word} order of release year")

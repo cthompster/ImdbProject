@@ -30,12 +30,15 @@ public abstract class BasePage {
     private static final By CONSENT_ACCEPT = By.xpath(
             "//*[contains(@data-testid,'consent') or contains(@data-testid,'cookie')]//button[normalize-space()='Accept']");
 
+    /** A rating such as "9.3" at the start of a rating text ("9.3/10", "9.3 (3.3M)"). */
+    protected static final Pattern LEADING_RATING = Pattern.compile("^(\\d{1,2}(?:\\.\\d)?)");
     /** First number in the text, allowing thousands separators: "250 Titles" gives 250. */
     private static final Pattern FIRST_NUMBER = Pattern.compile("(\\d[\\d,]*)");
 
     protected final WebDriver driver;
     protected final ConfigFileReader config;
     protected final WebDriverWait wait;
+    private boolean captchaShownDuringLoad;
 
     protected BasePage(WebDriver driver) {
         this.driver = driver;
@@ -55,7 +58,9 @@ public abstract class BasePage {
 
     /**
      * Navigates to this page through its plain {@code http://} address, as a user typing the address
-     * without "https" would, and waits until it is ready. The site is expected to redirect to HTTPS.
+     * without "https" would, and waits until it is ready. The browser should end up on HTTPS. Note that
+     * Chrome may upgrade the address to HTTPS itself (HTTPS-Upgrades, or a remembered HSTS entry) without
+     * asking the server over plain HTTP, so this checks the visitor's result, not the server's redirect.
      */
     public void loadOverPlainHttp() {
         String url = config.getApplicationUrl();
@@ -66,9 +71,18 @@ public abstract class BasePage {
     }
 
     private void open(String siteUrl) {
+        captchaShownDuringLoad = false;
         driver.get(siteUrl + path());
         afterNavigation();
         waitUntilLoaded();
+    }
+
+    /**
+     * True if IMDB showed its CAPTCHA during the last {@link #load()}. The browser's timing data may
+     * then describe the challenge page rather than this page.
+     */
+    public boolean wasCaptchaShownDuringLoad() {
+        return captchaShownDuringLoad;
     }
 
     /** Waits for the element that shows this page has rendered. Override in pages that have one. */
@@ -78,7 +92,8 @@ public abstract class BasePage {
     /**
      * Sub-resources (scripts, styles, images, frames, media) that this page loaded or references over plain
      * {@code http:}, i.e. mixed content. Ordinary links ({@code <a href>}) don't count. Uses the browser's
-     * Resource Timing list, whose default buffer keeps the first 250 entries, plus the elements in the DOM.
+     * Resource Timing list, whose default buffer keeps the first 250 entries, plus the elements in the DOM
+     * (including every candidate in {@code srcset}). Images that load lazily after the check aren't included.
      */
     public List<String> getInsecureResources() {
         Object result = js(
@@ -88,6 +103,13 @@ public abstract class BasePage {
               + "embed[src], link[rel~=\"stylesheet\"][href], link[rel~=\"preload\"][href]').forEach(el => {"
               + "  const url = el.src || el.href;"
               + "  if (url && url.startsWith('http:')) urls.add(url);"
+              + "});"
+              + "document.querySelectorAll('img[srcset], source[srcset]').forEach(el => {"
+              + "  el.getAttribute('srcset').split(',').map(c => c.trim().split(/\\s+/)[0]).forEach(c => {"
+              + "    if (!c) return;"
+              + "    const url = new URL(c, document.baseURI).href;"
+              + "    if (url.startsWith('http:')) urls.add(url);"
+              + "  });"
               + "});"
               + "return Array.from(urls);");
         List<String> urls = new ArrayList<>();
@@ -162,6 +184,7 @@ public abstract class BasePage {
      */
     private void waitForHumanVerificationIfShown() {
         if (!isCaptchaShown()) return;
+        captchaShownDuringLoad = true;
         if (config.isHeadless()) {
             throw new IllegalStateException("IMDB is asking for human verification (CAPTCHA), which can't be solved "
                     + "in headless mode. Run without -Dheadless=true and solve it in the browser window.");

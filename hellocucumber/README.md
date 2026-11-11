@@ -52,7 +52,8 @@ for every page the suite uses. The run then stops right away with an explanation
                                       screen-reader checks, HTTPS and load time on a movie's page
 
     Step definitions (src/test/java/imdbTests):
-        CommonSteps.java              page loading, signed-out check, "taken to page" check
+        CommonSteps.java              page loading, signed-out and "taken to page" checks,
+                                      HTTPS, mixed-content and load-time checks
         ImdbStepdefs.java             Top 250 steps
         TitleDisplayStepDefs.java     title page steps
         Hooks.java                    screenshot on failure and closing the browser

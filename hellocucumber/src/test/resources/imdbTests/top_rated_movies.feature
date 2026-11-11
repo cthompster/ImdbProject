@@ -42,18 +42,22 @@ Feature: Top Rated Movies
 
   Scenario: Sorting Movies List by IMDb rating
 
+  Lowest rating first: the default ranking is already close to highest-rating-first, so only
+  the ascending order shows that the list was really re-sorted.
+
     Given I load the "Top Rated Movies page"
-    When I sort the list by "IMDb rating" in descending order
-    Then all movies should be listed in descending order of IMDb rating
+    When I sort the list by "IMDb rating" in ascending order
+    Then all movies should be listed in ascending order of IMDb rating
 
   Scenario: The chart is only served over HTTPS
 
-  A visitor who types the plain http:// address is redirected to HTTPS, and the page loads
-  no scripts, styles or images over plain HTTP. These are passive checks of what a normal
+  A visitor who types the plain http:// address ends up on HTTPS (Chrome may upgrade the address
+  itself, so this checks the visitor's result rather than the server's redirect), and the page
+  loads no scripts, styles or images over plain HTTP. These are passive checks of what a normal
   visitor's browser receives.
 
     Given I open the "Top Rated Movies page" through its plain HTTP address
-    Then the browser should be redirected to the page's HTTPS address
+    Then the browser should end up on the page's HTTPS address
     And the page should not load any content over plain HTTP
 
   Scenario: The chart loads within a reasonable time

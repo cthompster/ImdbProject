@@ -30,7 +30,6 @@ public class TitlePage extends BasePage {
     private static final By HTML_ROOT = By.tagName("html");
     /** The year in the browser tab title: "The Shawshank Redemption (1994) - IMDb", "Fargo (TV Series 2014– ) - IMDb". */
     private static final Pattern TAB_TITLE_YEAR = Pattern.compile("\\([^()\\d]*(\\d{4})");
-    private static final Pattern LEADING_RATING = Pattern.compile("^(\\d{1,2}(?:\\.\\d)?)");
     /** Controls whose accessible name is checked, by the label used in the feature file. */
     private static final Map<String, By> CONTROLS = Map.of(
             "add to watchlist", WATCHLIST_BUTTON,

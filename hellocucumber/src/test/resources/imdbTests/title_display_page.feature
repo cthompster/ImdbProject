@@ -78,11 +78,12 @@ Feature: Title Display Page
 
   Scenario: The title page is only served over HTTPS
 
-  Passive checks of what a normal visitor's browser receives: the plain http:// address
-  redirects to HTTPS and the page loads no scripts, styles or images over plain HTTP.
+  Passive checks of what a normal visitor's browser receives: opening the plain http:// address
+  ends up on HTTPS (Chrome may upgrade the address itself, so this checks the visitor's result
+  rather than the server's redirect) and the page loads no scripts, styles or images over plain HTTP.
 
     Given I open the "Title Display page" through its plain HTTP address
-    Then the browser should be redirected to the page's HTTPS address
+    Then the browser should end up on the page's HTTPS address
     And the page should not load any content over plain HTTP
 
 

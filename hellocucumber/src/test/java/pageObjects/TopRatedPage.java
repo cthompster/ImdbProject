@@ -2,6 +2,9 @@ package pageObjects;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.openqa.selenium.By;
@@ -23,6 +26,16 @@ public class TopRatedPage extends BasePage {
     /** First entry of each row's metadata line ("1994 · 2h 22m · R") is the release year. */
     private static final By RELEASE_YEARS = By.cssSelector(
             "ul.ipc-metadata-list > li.ipc-metadata-list-summary-item .cli-title-metadata li:first-child");
+    /** Each row's IMDb rating, e.g. "9.3 (3.3M)". */
+    private static final By ROW_RATINGS = By.cssSelector(
+            "ul.ipc-metadata-list > li.ipc-metadata-list-summary-item [data-testid='ratingGroup--imdb-rating']");
+    /** Each row's rank badge, shown before the title, e.g. "#1". */
+    private static final By ROW_RANKS = By.cssSelector(
+            "ul.ipc-metadata-list > li.ipc-metadata-list-summary-item [data-testid='title-list-item-ranking']");
+    /** The number in a rank badge: "#1" gives 1. */
+    private static final Pattern RANK = Pattern.compile("^#(\\d+)$");
+    /** A release year such as "1994". */
+    private static final Pattern YEAR = Pattern.compile("^(\\d{4})$");
     private static final By SORT_SELECT = By.id("sort-by-selector");
     private static final By SORT_ORDER_BUTTON = By.id("swap-sort-order-button");
 
@@ -42,8 +55,7 @@ public class TopRatedPage extends BasePage {
     }
 
     @Override
-    public void load() {
-        super.load();
+    protected void waitUntilLoaded() {
         visible(LIST_ITEMS);
     }
 
@@ -62,11 +74,31 @@ public class TopRatedPage extends BasePage {
     }
 
     /**
-     * Picks a sort field by its visible label, e.g. "Release date".
+     * Sorts the list by a field, picked by its visible label (e.g. "Release date"), in the given order.
      * IMDB draws its own dropdown on top of a transparent native select, which Selenium's
      * {@link Select} refuses to use, so the option is chosen through the select element directly.
+     * Field and order are both applied before waiting for the list, so the wait is for the final order:
+     * it ends as soon as a different movie is first. If the final order keeps the same movie first
+     * (e.g. "IMDb rating", highest first, from the default ranking), it waits the full explicit wait.
      */
-    public void sortBy(String label) {
+    public void sortBy(String label, SortOrder order) {
+        String firstTitle = firstTitle();
+        boolean changed = selectSortField(label);
+        if (getSortOrder() != order) {
+            click(SORT_ORDER_BUTTON);
+            waitFor(ExpectedConditions.urlContains("%2C" + order.getUrlValue()));
+            changed = true;
+        }
+        if (!changed) return;
+        try {
+            waitForFirstTitleToChangeFrom(firstTitle);
+        } catch (TimeoutException e) {
+            // The URL already shows the new sort; the list kept its first movie.
+        }
+    }
+
+    /** Picks the sort field; returns false if it was already selected. */
+    private boolean selectSortField(String label) {
         WebElement select = waitFor(ExpectedConditions.presenceOfElementLocated(SORT_SELECT));
         List<WebElement> options = new Select(select).getOptions();
         String value = options.stream()
@@ -76,17 +108,10 @@ public class TopRatedPage extends BasePage {
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("No sort option \"" + label + "\". Options: "
                         + options.stream().map(o -> String.valueOf(o.getDomProperty("text"))).collect(Collectors.joining(", "))));
-        if (value.equals(select.getDomProperty("value"))) return;
-        String firstTitle = firstTitle();
+        if (value.equals(select.getDomProperty("value"))) return false;
         js(SELECT_OPTION_JS, select, value);
         waitFor(ExpectedConditions.urlContains("sort=" + value.toLowerCase(Locale.ROOT)));
-        // Most sort fields put a different movie first; wait for that so callers don't read the old list.
-        // Some (e.g. "IMDb rating" from "Ranking") may keep the same movie first, so a timeout here isn't an error.
-        try {
-            waitForFirstTitleToChangeFrom(firstTitle);
-        } catch (TimeoutException e) {
-            // The URL already shows the new sort; the list kept its first movie.
-        }
+        return true;
     }
 
     public SortOrder getSortOrder() {
@@ -98,31 +123,41 @@ public class TopRatedPage extends BasePage {
         throw new IllegalStateException("Can't tell the sort order from the sort button's label: \"" + label + "\"");
     }
 
-    public void setSortOrder(SortOrder order) {
-        if (getSortOrder() == order) return;
-        String firstTitle = firstTitle();
-        click(SORT_ORDER_BUTTON);
-        waitFor(ExpectedConditions.urlContains("%2C" + order.getUrlValue()));
-        waitForFirstTitleToChangeFrom(firstTitle);
-    }
-
     /**
      * Release year of every movie in the list, top to bottom. After a re-sort IMDB redraws the list in
      * batches, so this first waits until {@code expectedRows} rows have their year again.
      */
     public List<Integer> getReleaseYears(int expectedRows) {
+        return readRows(RELEASE_YEARS, expectedRows, YEAR, "a release year", Integer::valueOf);
+    }
+
+    /**
+     * The rank badge of each row, top to bottom ("#1" gives 1).
+     * First waits until {@code expectedRows} rows are drawn.
+     */
+    public List<Integer> getRanks(int expectedRows) {
+        return readRows(ROW_RANKS, expectedRows, RANK, "a rank such as \"#1\"", Integer::valueOf);
+    }
+
+    /** The IMDb rating of each row, top to bottom. First waits until {@code expectedRows} rows have one. */
+    public List<Double> getImdbRatings(int expectedRows) {
+        return readRows(ROW_RATINGS, expectedRows, LEADING_RATING, "an IMDb rating", Double::valueOf);
+    }
+
+    private <T> List<T> readRows(By locator, int expectedRows, Pattern pattern, String what, Function<String, T> parse) {
         try {
-            waitFor(d -> d.findElements(RELEASE_YEARS).size() >= expectedRows);
+            waitFor(d -> d.findElements(locator).size() >= expectedRows);
         } catch (TimeoutException e) {
             // Fall through: the caller's assertion reports how many rows were found.
         }
-        return driver.findElements(RELEASE_YEARS).stream()
+        return driver.findElements(locator).stream()
                 .map(e -> String.valueOf(e.getDomProperty("textContent")).trim())
                 .map(text -> {
-                    if (!text.matches("\\d{4}")) {
-                        throw new IllegalStateException("Expected a release year but found \"" + text + "\"");
+                    Matcher m = pattern.matcher(text);
+                    if (!m.find()) {
+                        throw new IllegalStateException("Expected " + what + " but found \"" + text + "\"");
                     }
-                    return Integer.valueOf(text);
+                    return parse.apply(m.group(1));
                 })
                 .collect(Collectors.toList());
     }

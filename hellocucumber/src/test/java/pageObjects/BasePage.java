@@ -1,6 +1,10 @@
 package pageObjects;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -26,12 +30,15 @@ public abstract class BasePage {
     private static final By CONSENT_ACCEPT = By.xpath(
             "//*[contains(@data-testid,'consent') or contains(@data-testid,'cookie')]//button[normalize-space()='Accept']");
 
+    /** A rating such as "9.3" at the start of a rating text ("9.3/10", "9.3 (3.3M)"). */
+    protected static final Pattern LEADING_RATING = Pattern.compile("^(\\d{1,2}(?:\\.\\d)?)");
     /** First number in the text, allowing thousands separators: "250 Titles" gives 250. */
     private static final Pattern FIRST_NUMBER = Pattern.compile("(\\d[\\d,]*)");
 
     protected final WebDriver driver;
     protected final ConfigFileReader config;
     protected final WebDriverWait wait;
+    private boolean captchaShownDuringLoad;
 
     protected BasePage(WebDriver driver) {
         this.driver = driver;
@@ -46,8 +53,85 @@ public abstract class BasePage {
 
     /** Navigates to this page and waits until it is ready. */
     public void load() {
-        driver.get(config.getApplicationUrl() + path());
+        open(config.getApplicationUrl());
+    }
+
+    /**
+     * Navigates to this page through its plain {@code http://} address, as a user typing the address
+     * without "https" would, and waits until it is ready. The browser should end up on HTTPS. Note that
+     * Chrome may upgrade the address to HTTPS itself (HTTPS-Upgrades, or a remembered HSTS entry) without
+     * asking the server over plain HTTP, so this checks the visitor's result, not the server's redirect.
+     */
+    public void loadOverPlainHttp() {
+        String url = config.getApplicationUrl();
+        if (!url.startsWith("https://")) {
+            throw new IllegalStateException("The plain-HTTP check needs an https:// site URL, but url is " + url);
+        }
+        open("http://" + url.substring("https://".length()));
+    }
+
+    private void open(String siteUrl) {
+        captchaShownDuringLoad = false;
+        driver.get(siteUrl + path());
         afterNavigation();
+        waitUntilLoaded();
+    }
+
+    /**
+     * True if IMDB showed its CAPTCHA during the last {@link #load()}. The browser's timing data may
+     * then describe the challenge page rather than this page.
+     */
+    public boolean wasCaptchaShownDuringLoad() {
+        return captchaShownDuringLoad;
+    }
+
+    /** Waits for the element that shows this page has rendered. Override in pages that have one. */
+    protected void waitUntilLoaded() {
+    }
+
+    /**
+     * Sub-resources (scripts, styles, images, frames, media) that this page loaded or references over plain
+     * {@code http:}, i.e. mixed content. Ordinary links ({@code <a href>}) don't count. Uses the browser's
+     * Resource Timing list, whose default buffer keeps the first 250 entries, plus the elements in the DOM
+     * (including every candidate in {@code srcset}). Images that load lazily after the check aren't included.
+     */
+    public List<String> getInsecureResources() {
+        Object result = js(
+                "const urls = new Set();"
+              + "performance.getEntriesByType('resource').forEach(e => { if (e.name.startsWith('http:')) urls.add(e.name); });"
+              + "document.querySelectorAll('img[src], script[src], iframe[src], source[src], video[src], audio[src], "
+              + "embed[src], link[rel~=\"stylesheet\"][href], link[rel~=\"preload\"][href]').forEach(el => {"
+              + "  const url = el.src || el.href;"
+              + "  if (url && url.startsWith('http:')) urls.add(url);"
+              + "});"
+              + "document.querySelectorAll('img[srcset], source[srcset]').forEach(el => {"
+              + "  el.getAttribute('srcset').split(',').map(c => c.trim().split(/\\s+/)[0]).forEach(c => {"
+              + "    if (!c) return;"
+              + "    const url = new URL(c, document.baseURI).href;"
+              + "    if (url.startsWith('http:')) urls.add(url);"
+              + "  });"
+              + "});"
+              + "return Array.from(urls);");
+        List<String> urls = new ArrayList<>();
+        if (result instanceof List) {
+            ((List<?>) result).forEach(u -> urls.add(String.valueOf(u)));
+        }
+        return urls;
+    }
+
+    /**
+     * Timings of the current page load from the browser's Navigation Timing API, in milliseconds since
+     * navigation start: {@code responseStart} (time to first byte) and {@code domContentLoaded}. Waits until
+     * the DOMContentLoaded event has finished.
+     */
+    public Map<String, Long> getNavigationTimings() {
+        String script = "const n = performance.getEntriesByType('navigation')[0];"
+              + "if (!n || n.domContentLoadedEventEnd <= 0) return null;"
+              + "return {responseStart: Math.round(n.responseStart), domContentLoaded: Math.round(n.domContentLoadedEventEnd)};";
+        Object result = waitFor(d -> js(script));
+        Map<String, Long> timings = new LinkedHashMap<>();
+        ((Map<?, ?>) result).forEach((k, v) -> timings.put(String.valueOf(k), ((Number) v).longValue()));
+        return timings;
     }
 
     /** True once the browser is on this page (waits up to the explicit-wait timeout). */
@@ -100,6 +184,7 @@ public abstract class BasePage {
      */
     private void waitForHumanVerificationIfShown() {
         if (!isCaptchaShown()) return;
+        captchaShownDuringLoad = true;
         if (config.isHeadless()) {
             throw new IllegalStateException("IMDB is asking for human verification (CAPTCHA), which can't be solved "
                     + "in headless mode. Run without -Dheadless=true and solve it in the browser window.");

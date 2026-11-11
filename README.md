@@ -16,6 +16,9 @@ Selenium 4 and JUnit 5. Everything lives in the [`hellocucumber`](hellocucumber)
 
 **A movie's title page** (`title_display_page.feature`; default movie: *The Shawshank Redemption*, `tt0111161`)
 - Adding to the Watchlist or rating the movie while signed out sends you to the sign-in page.
+- The sign-in page offers *Create an account*, which leads to Amazon's sign-in page, and
+  *Sign in to an existing account*, which reveals sign-in with Amazon, IMDb, Google and Apple; each
+  reaches the expected site over HTTPS (checked by address only; nothing is typed or submitted).
 - The share menu offers Facebook, Twitter and Email, each linking to this movie.
 - *Copy link* shows the message "Link copied".
 - The page shows the movie's name, release year and IMDb rating.
@@ -25,8 +28,9 @@ Selenium 4 and JUnit 5. Everything lives in the [`hellocucumber`](hellocucumber)
 Security and performance checks are passive: they only look at what a normal visitor's browser
 receives. There is no load testing or attack testing against IMDb.
 
-Scenarios that need real accounts (creating an account, signing in with IMDb, Amazon, Facebook or
-Google) are tagged `@manual`. They document the expected behaviour and are skipped in automated runs.
+Scenarios that need real accounts (creating an account, signing in with IMDb, Amazon, Google or
+Apple) are tagged `@manual`. They document the expected behaviour and are skipped in automated runs; only their
+signed-out part (above) is automated.
 
 The project also includes Cucumber's "Is it Friday yet?" tutorial as a simple example.
 
@@ -45,7 +49,7 @@ cd hellocucumber
 mvn test
 ```
 
-A Chrome window opens and runs each scenario. A full run takes about a minute.
+A Chrome window opens and runs each scenario. A full run takes a minute or two.
 
 Options (any setting in `src/test/resources/configuration.properties` can be overridden with `-D`):
 
@@ -70,7 +74,7 @@ so run with a visible browser.
 
 **In the terminal**, Maven prints a summary at the end of the run:
 ```
-[INFO] Tests run: 25, Failures: 0, Errors: 0, Skipped: 5
+[INFO] Tests run: 38, Failures: 0, Errors: 0, Skipped: 5
 [INFO] BUILD SUCCESS
 ```
 "Skipped" counts the `@manual` scenarios.

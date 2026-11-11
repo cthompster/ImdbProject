@@ -10,11 +10,20 @@ Selenium 4 and JUnit 5. Everything lives in the [`hellocucumber`](hellocucumber)
 **Top 250 Movies chart** (`top_rated_movies.feature`)
 - Refining the list by genre (Comedy, Action, Drama) opens IMDb's search filtered by that genre, and it returns titles.
 - Sorting by release date, ascending or descending, lists all 250 movies in that order of release year.
+- Sorting by IMDb rating, highest first, lists the ratings in descending order.
+- The movies are numbered #1 to #250 in ranking order.
+- The page is served only over HTTPS and loads within 10 seconds.
 
 **A movie's title page** (`title_display_page.feature`; default movie: *The Shawshank Redemption*, `tt0111161`)
 - Adding to the Watchlist or rating the movie while signed out sends you to the sign-in page.
 - The share menu offers Facebook, Twitter and Email, each linking to this movie.
 - *Copy link* shows the message "Link copied".
+- The page shows the movie's name, release year and IMDb rating.
+- It works with a screen reader: one main heading, a declared language, named controls and poster alt text.
+- The page is served only over HTTPS and loads within 10 seconds.
+
+Security and performance checks are passive: they only look at what a normal visitor's browser
+receives. There is no load testing or attack testing against IMDb.
 
 Scenarios that need real accounts (creating an account, signing in with IMDb, Amazon, Facebook or
 Google) are tagged `@manual`. They document the expected behaviour and are skipped in automated runs.

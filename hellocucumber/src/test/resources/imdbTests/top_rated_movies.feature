@@ -32,3 +32,34 @@ Feature: Top Rated Movies
       | order      |
       | ascending  |
       | descending |
+
+  Scenario: Movies are numbered in ranking order
+
+  By default the chart is ordered by ranking, and each movie shows its rank ("#1", "#2", ...).
+
+    Given I load the "Top Rated Movies page"
+    Then the movies should be numbered from 1 to the total shown, in ranking order
+
+  Scenario: Sorting Movies List by IMDb rating
+
+    Given I load the "Top Rated Movies page"
+    When I sort the list by "IMDb rating" in descending order
+    Then all movies should be listed in descending order of IMDb rating
+
+  Scenario: The chart is only served over HTTPS
+
+  A visitor who types the plain http:// address is redirected to HTTPS, and the page loads
+  no scripts, styles or images over plain HTTP. These are passive checks of what a normal
+  visitor's browser receives.
+
+    Given I open the "Top Rated Movies page" through its plain HTTP address
+    Then the browser should be redirected to the page's HTTPS address
+    And the page should not load any content over plain HTTP
+
+  Scenario: The chart loads within a reasonable time
+
+  Measured in the browser with the Navigation Timing API (time to DOMContentLoaded). The limit
+  is generous so that only a large slowdown fails; the timings are printed on every run.
+
+    Given I load the "Top Rated Movies page"
+    Then the page should be ready within 10 seconds

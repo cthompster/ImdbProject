@@ -1,6 +1,10 @@
 package pageObjects;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -46,8 +50,66 @@ public abstract class BasePage {
 
     /** Navigates to this page and waits until it is ready. */
     public void load() {
-        driver.get(config.getApplicationUrl() + path());
+        open(config.getApplicationUrl());
+    }
+
+    /**
+     * Navigates to this page through its plain {@code http://} address, as a user typing the address
+     * without "https" would, and waits until it is ready. The site is expected to redirect to HTTPS.
+     */
+    public void loadOverPlainHttp() {
+        String url = config.getApplicationUrl();
+        if (!url.startsWith("https://")) {
+            throw new IllegalStateException("The plain-HTTP check needs an https:// site URL, but url is " + url);
+        }
+        open("http://" + url.substring("https://".length()));
+    }
+
+    private void open(String siteUrl) {
+        driver.get(siteUrl + path());
         afterNavigation();
+        waitUntilLoaded();
+    }
+
+    /** Waits for the element that shows this page has rendered. Override in pages that have one. */
+    protected void waitUntilLoaded() {
+    }
+
+    /**
+     * Sub-resources (scripts, styles, images, frames, media) that this page loaded or references over plain
+     * {@code http:}, i.e. mixed content. Ordinary links ({@code <a href>}) don't count. Uses the browser's
+     * Resource Timing list, whose default buffer keeps the first 250 entries, plus the elements in the DOM.
+     */
+    public List<String> getInsecureResources() {
+        Object result = js(
+                "const urls = new Set();"
+              + "performance.getEntriesByType('resource').forEach(e => { if (e.name.startsWith('http:')) urls.add(e.name); });"
+              + "document.querySelectorAll('img[src], script[src], iframe[src], source[src], video[src], audio[src], "
+              + "embed[src], link[rel~=\"stylesheet\"][href], link[rel~=\"preload\"][href]').forEach(el => {"
+              + "  const url = el.src || el.href;"
+              + "  if (url && url.startsWith('http:')) urls.add(url);"
+              + "});"
+              + "return Array.from(urls);");
+        List<String> urls = new ArrayList<>();
+        if (result instanceof List) {
+            ((List<?>) result).forEach(u -> urls.add(String.valueOf(u)));
+        }
+        return urls;
+    }
+
+    /**
+     * Timings of the current page load from the browser's Navigation Timing API, in milliseconds since
+     * navigation start: {@code responseStart} (time to first byte) and {@code domContentLoaded}. Waits until
+     * the DOMContentLoaded event has finished.
+     */
+    public Map<String, Long> getNavigationTimings() {
+        String script = "const n = performance.getEntriesByType('navigation')[0];"
+              + "if (!n || n.domContentLoadedEventEnd <= 0) return null;"
+              + "return {responseStart: Math.round(n.responseStart), domContentLoaded: Math.round(n.domContentLoadedEventEnd)};";
+        Object result = waitFor(d -> js(script));
+        Map<String, Long> timings = new LinkedHashMap<>();
+        ((Map<?, ?>) result).forEach((k, v) -> timings.put(String.valueOf(k), ((Number) v).longValue()));
+        return timings;
     }
 
     /** True once the browser is on this page (waits up to the explicit-wait timeout). */

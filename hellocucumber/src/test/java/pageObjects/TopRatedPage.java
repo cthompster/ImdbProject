@@ -2,6 +2,9 @@ package pageObjects;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.openqa.selenium.By;
@@ -23,6 +26,16 @@ public class TopRatedPage extends BasePage {
     /** First entry of each row's metadata line ("1994 · 2h 22m · R") is the release year. */
     private static final By RELEASE_YEARS = By.cssSelector(
             "ul.ipc-metadata-list > li.ipc-metadata-list-summary-item .cli-title-metadata li:first-child");
+    /** Each row's IMDb rating, e.g. "9.3 (3.3M)". */
+    private static final By ROW_RATINGS = By.cssSelector(
+            "ul.ipc-metadata-list > li.ipc-metadata-list-summary-item [data-testid='ratingGroup--imdb-rating']");
+    /** Each row's rank badge, shown before the title, e.g. "#1". */
+    private static final By ROW_RANKS = By.cssSelector(
+            "ul.ipc-metadata-list > li.ipc-metadata-list-summary-item [data-testid='title-list-item-ranking']");
+    /** The number in a rank badge: "#1" gives 1. */
+    private static final Pattern RANK = Pattern.compile("^#(\\d+)$");
+    /** A rating such as "9.3" at the start of the row's rating text. */
+    private static final Pattern RATING = Pattern.compile("^(\\d{1,2}(?:\\.\\d)?)");
     private static final By SORT_SELECT = By.id("sort-by-selector");
     private static final By SORT_ORDER_BUTTON = By.id("swap-sort-order-button");
 
@@ -42,8 +55,7 @@ public class TopRatedPage extends BasePage {
     }
 
     @Override
-    public void load() {
-        super.load();
+    protected void waitUntilLoaded() {
         visible(LIST_ITEMS);
     }
 
@@ -123,6 +135,37 @@ public class TopRatedPage extends BasePage {
                         throw new IllegalStateException("Expected a release year but found \"" + text + "\"");
                     }
                     return Integer.valueOf(text);
+                })
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * The rank badge of each row, top to bottom ("#1" gives 1).
+     * First waits until {@code expectedRows} rows are drawn.
+     */
+    public List<Integer> getRanks(int expectedRows) {
+        return readRows(ROW_RANKS, expectedRows, RANK, "a rank such as \"#1\"", Integer::valueOf);
+    }
+
+    /** The IMDb rating of each row, top to bottom. First waits until {@code expectedRows} rows have one. */
+    public List<Double> getImdbRatings(int expectedRows) {
+        return readRows(ROW_RATINGS, expectedRows, RATING, "an IMDb rating", Double::valueOf);
+    }
+
+    private <T> List<T> readRows(By locator, int expectedRows, Pattern pattern, String what, Function<String, T> parse) {
+        try {
+            waitFor(d -> d.findElements(locator).size() >= expectedRows);
+        } catch (TimeoutException e) {
+            // Fall through: the caller's assertion reports how many rows were found.
+        }
+        return driver.findElements(locator).stream()
+                .map(e -> String.valueOf(e.getDomProperty("textContent")).trim())
+                .map(text -> {
+                    Matcher m = pattern.matcher(text);
+                    if (!m.find()) {
+                        throw new IllegalStateException("Expected " + what + " but found \"" + text + "\"");
+                    }
+                    return parse.apply(m.group(1));
                 })
                 .collect(Collectors.toList());
     }

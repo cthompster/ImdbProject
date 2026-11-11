@@ -55,6 +55,46 @@ Feature: Title Display Page
     Then I should see the message "Link copied"
 
 
+  Scenario: Show the movie's name, release year and rating
+
+  The values change between movies and over time, so the checks are on their form: the name
+  matches the browser tab, the year is a plausible release year and the rating is 1 to 10.
+
+    Given I load the "Title Display page"
+    Then the page should show the movie's name, release year and IMDb rating
+
+
+  Scenario: The title page is usable with a screen reader
+
+    Given I load the "Title Display page"
+    Then the movie's name should be the only main heading
+    And the page should declare its language
+    And these controls should have an accessible name:
+      | Add to Watchlist |
+      | Rate             |
+      | Share            |
+    And the poster image should have alternative text
+
+
+  Scenario: The title page is only served over HTTPS
+
+  Passive checks of what a normal visitor's browser receives: the plain http:// address
+  redirects to HTTPS and the page loads no scripts, styles or images over plain HTTP.
+
+    Given I open the "Title Display page" through its plain HTTP address
+    Then the browser should be redirected to the page's HTTPS address
+    And the page should not load any content over plain HTTP
+
+
+  Scenario: The title page loads within a reasonable time
+
+  Measured in the browser with the Navigation Timing API (time to DOMContentLoaded). The limit
+  is generous so that only a large slowdown fails; the timings are printed on every run.
+
+    Given I load the "Title Display page"
+    Then the page should be ready within 10 seconds
+
+
   @manual
   Scenario: Create a new IMDB account
 

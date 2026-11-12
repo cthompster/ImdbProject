@@ -83,7 +83,9 @@ Project subagents in `.claude/agents/`:
 Project skills in `.claude/skills/`:
 
 - `codebase-onboarding` (`/codebase-onboarding [topic]`): read-only guided tour or Q&A for developers
-  new to the code. It traces real scenarios through the layers and doesn't run the tests.
+  new to the code. It traces real scenarios through the layers and doesn't run the tests. Its
+  `resources/architecture.md` maps the components, runtime wiring, dependencies and resources; update
+  it when those change.
 
 ## Git workflow
 

@@ -16,8 +16,10 @@ The developer's question or topic, if they gave one: $ARGUMENTS
 1. **Ground yourself first.** Read `CLAUDE.md` (rules, commands, layout), then `README.md`,
    `hellocucumber/README.md` and `hellocucumber/WIKI.md`, as far as the question needs. For how the
    pieces fit together (layers, runtime wiring, dependencies, resources), start from
-   `resources/architecture.md` in this skill's folder. Read the actual source before explaining it;
-   never describe code you haven't opened.
+   `resources/architecture.md` in this skill's folder. For how a mechanism really works (waits,
+   CAPTCHA handling, the browser profile, sorting, the sign-in page, debugging, history), use
+   `resources/deep-dive-guide.md`. Read the actual source before explaining it; never describe code
+   you haven't opened.
 2. **Match the request:**
    - **No topic** ("onboard me", "how does this work?"): give the guided tour below.
    - **A specific question** ("how are CAPTCHAs handled?", "where do waits happen?"): answer it directly,

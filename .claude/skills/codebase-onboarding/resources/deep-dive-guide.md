@@ -1,6 +1,6 @@
 # Deep-dive guide: how the suite really works
 
-`architecture.md` is the map: what exists and what depends on what. This guide covers the mechanisms
+`architecture-guide.md` is the map: what exists and what depends on what. This guide covers the mechanisms
 that are hard to see from a quick read: how they work, why they were built that way, and how they fail.
 `CLAUDE.md` holds the rules.
 
@@ -389,7 +389,7 @@ theory, because every live run can trigger a CAPTCHA.
   run showed that "Sign in to an existing account" reveals them **in place**. That is why `choose()`
   waits for any of three outcomes instead of just a URL change.
 - **PRs #13–#16:** tooling and docs: the reviewer's report format, `CLAUDE.md`, this onboarding skill
-  and its `architecture.md`.
+  and its `architecture-guide.md`.
 
 **Choices whose reasons are recorded in the code comments:**
 - ignoring stale elements: React redraws (`BasePage` constructor)

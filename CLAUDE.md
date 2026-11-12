@@ -84,7 +84,7 @@ Project skills in `.claude/skills/`:
 
 - `codebase-onboarding` (`/codebase-onboarding [topic]`): read-only guided tour or Q&A for developers
   new to the code. It traces real scenarios through the layers and doesn't run the tests. Its
-  `resources/architecture.md` maps the components, runtime wiring, dependencies and resources, and
+  `resources/architecture-guide.md` maps the components, runtime wiring, dependencies and resources, and
   `resources/deep-dive-guide.md` explains the key mechanisms and how to debug them; update them when
   those change.
 

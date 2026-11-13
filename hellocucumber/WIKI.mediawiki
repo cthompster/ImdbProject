@@ -88,7 +88,7 @@ Common options:
 |}
 In IntelliJ, run <code>imdbTests/RunImdbTests</code>, or right-click a <code>.feature</code> file and choose ''Run''.
 
-The report is written to <code>target/cucumber-reports/imdb.html</code>. Failed scenarios include a screenshot and the page URL.
+The report is written to <code>target/cucumber-reports/imdb.html</code> (the latest run). Failed scenarios include a screenshot and the page URL. Every run of <code>RunImdbTests</code> (Maven or IntelliJ, not a right-click run of one <code>.feature</code> file) is also kept as a numbered report in <code>test-history/</code>, listed in <code>test-history/index.html</code> with its scenario counts; the newest 50 full and filtered runs and, separately, the newest 10 dry runs are kept.
 
 == Current status ==
 As of 11 November 2026, all 20 automated IMDb scenarios and all 8 tutorial scenarios pass against the live site; the 5 <code>@manual</code> scenarios are skipped.

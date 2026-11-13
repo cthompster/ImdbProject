@@ -30,7 +30,11 @@ matches your installed browser automatically.
         1. Open the hellocucumber project (pom.xml)
         2. Run imdbTests/RunImdbTests, or right-click a .feature file and choose Run
 
-    Report: target/cucumber-reports/imdb.html. Failed scenarios include a screenshot and the URL.
+    Report: target/cucumber-reports/imdb.html (the latest run). Failed scenarios include a screenshot
+    and the URL. Every run of RunImdbTests (Maven or IntelliJ, not a right-click run of one .feature
+    file) is also kept as a numbered report in test-history/, listed in test-history/index.html with
+    its scenario counts (newest 50 full/filtered runs and newest 10 dry runs kept; historyKeep and
+    historyKeepDryRuns, 0 keeps all).
 
 **IMDB's "confirm you are human" check**
 

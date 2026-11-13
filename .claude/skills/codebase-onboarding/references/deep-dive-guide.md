@@ -23,7 +23,8 @@ Then all 250 movies should be listed in <order> order of release year
 **Start-up**
 1. `mvn test` → Surefire → JUnit Platform finds the `@Suite` class `imdbTests.RunImdbTests`. It runs
    the `cucumber` engine with glue `imdbTests` and writes the report to
-   `target/cucumber-reports/imdb.html`. `junit-platform.properties` drops `@manual` scenarios.
+   `target/cucumber-reports/imdb.html`, plus a numbered copy in `test-history/` through the
+   `reporting.RunHistoryReport` plugin. `junit-platform.properties` drops `@manual` scenarios.
 2. For this scenario PicoContainer creates **one** `TestContext`, which holds a `WebDriverManager` (no
    browser yet) and a `PageObjectManager`. Every step class and `Hooks` that the scenario touches gets
    that same instance through its constructor.
@@ -334,7 +335,8 @@ skipped, and the build still passes.
 
 **Dry run:** `-Dcucumber.execution.dry-run=true` opens no browser and checks that every step has a
 definition. It still **overwrites** `imdb.html`, as every run does, so do a full run before sharing
-the report.
+the report. Earlier runs aren't lost: each is kept in `test-history/`, and dry and filtered runs are
+labelled `_dry-run` and `_filtered` there.
 
 **Unknown names fail with a list.** `PageName.fromLabel`, `SortOrder.fromText`,
 `SignInPage.optionLocator` and `TitlePage.getAccessibleName` all throw with the valid choices, so a
@@ -349,6 +351,8 @@ typo in a feature file explains itself.
 
 Open `target/cucumber-reports/imdb.html`. A failed scenario has an embedded **"Screenshot at
 failure"** and a **"URL at failure"** log line. Look at those before reading the stack trace.
+To tell a one-off from a pattern, open `test-history/index.html`: it lists earlier runs with their
+pass/fail counts, and each run's full report, screenshots included, is one click away.
 
 | You see | It means | Do |
 |---|---|---|

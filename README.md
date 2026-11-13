@@ -85,6 +85,7 @@ so run with a visible browser.
 |--------|---------------|
 | `hellocucumber/target/cucumber-reports/imdb.html` | The IMDb scenarios: each scenario and step, pass/fail and timings. A failed scenario includes a screenshot of the browser and the page URL. |
 | `hellocucumber/target/cucumber-reports/hellocucumber.html` | The "Is it Friday yet?" tutorial |
+| `hellocucumber/test-history/index.html` | Every earlier IMDb run: run number, date and time, full/filtered/dry run, passed/failed/skipped scenarios (`@manual` and filtered-out scenarios aren't counted, so "Skipped" there isn't Maven's 5), and a link to that run's report |
 
 On a Mac you can open it from the terminal:
 ```
@@ -93,7 +94,12 @@ open hellocucumber/target/cucumber-reports/imdb.html
 
 **For CI tools:** JUnit XML and text summaries are in `hellocucumber/target/surefire-reports/`.
 
-Each run replaces the previous reports. `target/` is not stored in git.
+The reports in `target/` always show the latest run. Each run of `RunImdbTests` (from Maven or IntelliJ,
+but not a right-click run of a single `.feature` file) is also kept as a numbered report in
+`hellocucumber/test-history/` (`run-0001_2026-11-13_12-05.html`, ...). The newest 50 full and filtered
+runs are kept and, counted separately, the newest 10 dry runs; change this with `historyKeep` and
+`historyKeepDryRuns` in `configuration.properties` (0 keeps all). Neither folder is stored in git, and
+`mvn clean` deletes `target/` but not `test-history/`.
 
 ## More information
 - [`hellocucumber/README.md`](hellocucumber/README.md): detailed setup, configuration and the project's key files

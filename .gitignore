@@ -1,6 +1,7 @@
 .DS_Store
 target/
 hellocucumber/chrome-profile/
+hellocucumber/test-history/
 # IntelliJ: per-user state, and libraries regenerated from pom.xml
 hellocucumber/.idea/workspace.xml
 hellocucumber/.idea/libraries/

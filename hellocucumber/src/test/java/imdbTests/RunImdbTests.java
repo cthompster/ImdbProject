@@ -8,11 +8,16 @@ import org.junit.platform.suite.api.IncludeEngines;
 import org.junit.platform.suite.api.SelectPackages;
 import org.junit.platform.suite.api.Suite;
 
-/** Runs the IMDB features in src/test/resources/imdbTests. Scenarios tagged @manual are skipped. */
+/**
+ * Runs the IMDB features in src/test/resources/imdbTests. Scenarios tagged @manual are skipped.
+ * The latest report is target/cucumber-reports/imdb.html; reporting.RunHistoryReport also keeps a numbered
+ * copy of every run in test-history/.
+ */
 @Suite
 @IncludeEngines("cucumber")
 @SelectPackages("imdbTests")
 @ConfigurationParameter(key = GLUE_PROPERTY_NAME, value = "imdbTests")
-@ConfigurationParameter(key = PLUGIN_PROPERTY_NAME, value = "pretty, html:target/cucumber-reports/imdb.html")
+@ConfigurationParameter(key = PLUGIN_PROPERTY_NAME,
+        value = "pretty, html:target/cucumber-reports/imdb.html, reporting.RunHistoryReport")
 public class RunImdbTests {
 }

@@ -1,13 +1,27 @@
 #!/usr/bin/env bash
-# PreToolUse (Bash): enforce the git workflow in CLAUDE.md.
-# - Never commit, push, merge or hard-reset on master directly (work on a branch, merge through a PR).
-#   Allowed on master: `git merge --ff-only` (updating master after a PR merge) and
-#   `git push ... --delete <branch>` (deleting a merged branch on GitHub).
-# - Never force-add the git-ignored Chrome profile (it holds cookies and the CAPTCHA pass).
-# Exit 2 blocks the command and shows the reason to Claude.
+# PreToolUse (Bash): enforce the git workflow in CLAUDE.md. Exit 2 blocks the command and shows the reason.
+#
+# On any branch:
+# - never push to master (e.g. `git push origin HEAD:master`); master only changes through PRs;
+# - never stage the git-ignored Chrome profile (cookies and the CAPTCHA pass): no force-adding it or
+#   force-adding broadly (`git add -f .`, `-A`, `hellocucumber`), and no commit while any of it is staged;
+# - no commit while uncommitted changes to the suite add bot-protection evasion (evasion-patterns.txt),
+#   which catches changes made through Bash or an IDE that bot-protection-guard.sh never saw.
+# On master:
+# - no commit, revert, cherry-pick, am, rebase, merge, pull, push, `reset --hard` or `clean -f`;
+# - allowed: `merge --ff-only` / `pull --ff-only` (updating master after a PR merge),
+#   `push --delete <branch>` / `push origin :<branch>` (deleting a merged branch), and any command
+#   that starts by creating a new branch (`git checkout -b x && git commit ...`).
+# Limitation: the whole command text is checked, so text that only mentions a blocked command (for
+# example in a heredoc) can be blocked too. Put such text in a file instead.
 set -u
 
-cmd=$(jq -r '.tool_input.command // empty')
+if ! command -v jq >/dev/null 2>&1; then
+  echo "git-guard hook is disabled: jq was not found." >&2
+  exit 1
+fi
+. "$(dirname "$0")/lib-evasion.sh"
+cmd=$(jq -r '.tool_input.command // empty' 2>/dev/null) || { echo "git-guard hook: could not read its input." >&2; exit 1; }
 [ -z "$cmd" ] && exit 0
 case "$cmd" in *git*) ;; *) exit 0 ;; esac
 
@@ -16,36 +30,64 @@ block() {
   exit 2
 }
 
-# Force-adding chrome-profile, on any branch.
-if printf '%s' "$cmd" | grep -Eq 'git[[:space:]]+add[^;&|]*(-f|--force)[^;&|]*chrome-profile|git[[:space:]]+add[^;&|]*chrome-profile[^;&|]*(-f|--force)'; then
-  block "hellocucumber/chrome-profile/ is git-ignored on purpose: it holds cookies and IMDb's aws-waf-token. Never commit it."
-fi
+# `git` as a command word (also after "(", a quote or a path such as /usr/bin/git), then git's own
+# options (-C <dir>, -c <k=v>, --no-pager, ...), then the subcommand.
+G='(^|[^[:alnum:]_.-])git'
+ARG="('[^']*'|\"[^\"]*\"|[^[:space:]]+)"
+OPTS="([[:space:]]+((-C|-c|--git-dir|--work-tree)[[:space:]]+$ARG|-[^[:space:]]*))*"
+is_sub() { printf '%s' "$1" | grep -Eq "$G$OPTS[[:space:]]+($2)([[:space:]]|\$)"; }
+has() { printf '%s' "$1" | grep -Eq -- "$2"; }
 
 dir="${CLAUDE_PROJECT_DIR:-.}"
 branch=$(git -C "$dir" symbolic-ref --short -q HEAD 2>/dev/null)
-[ "$branch" = "master" ] || exit 0
-
-# A command that first creates or switches to another branch isn't acting on master.
-if printf '%s' "$cmd" | grep -Eq 'git[[:space:]]+(checkout|switch)[^;&|]*[[:space:]](-b|-B|-c|-C|--create|--force-create)([[:space:]]|$)'; then
-  exit 0
-fi
 
 # Check each part of a compound command separately.
 parts=$(printf '%s' "$cmd" | awk '{ gsub(/&&|\|\||;/, "\n"); print }')
+# The first part that runs git (an earlier `cd` doesn't count).
+first=$(printf '%s\n' "$parts" | grep -E "$G" | sed -n '1p')
+
 while IFS= read -r part; do
-  if printf '%s' "$part" | grep -Eq '(^|[[:space:]])git[[:space:]]+((-C|-c|--git-dir|--work-tree)[[:space:]]+[^[:space:]]+[[:space:]]+|-[^[:space:]]*[[:space:]]+)*commit([[:space:]]|$)'; then
+  # --- Any branch ---
+  if is_sub "$part" 'push' && has "$part" '[[:space:]]\+?([^[:space:]]*:)?(refs/heads/)?master([[:space:]]|$)'; then
+    block "this pushes to master. Push a feature branch and merge it through a PR."
+  fi
+  if is_sub "$part" 'add' && has "$part" '[[:space:]](-f|--force|-[[:alpha:]]*f[[:alpha:]]*)([[:space:]]|$)' \
+     && has "$part" '(chrome-profile|[[:space:]](-A|--all|-[[:alpha:]]*A[[:alpha:]]*|\.|\./|\*|hellocucumber/?|hellocucumber/\*)([[:space:]]|$))'; then
+    block "force-adding this path would stage hellocucumber/chrome-profile/, which is git-ignored on purpose (it holds cookies and IMDb's aws-waf-token). Add files by name without -f."
+  fi
+  if is_sub "$part" 'commit' && git -C "$dir" diff --cached --name-only 2>/dev/null | grep -q '^hellocucumber/chrome-profile/'; then
+    block "files from hellocucumber/chrome-profile/ are staged. Unstage them (git restore --staged hellocucumber/chrome-profile) before committing."
+  fi
+  # Bot-protection evasion in any uncommitted change to the suite, however it was made (Edit, Bash, IDE).
+  # Checks all uncommitted changes, not just staged ones, because `git add -A && git commit` stages in the
+  # same command.
+  if is_sub "$part" 'commit'; then
+    hits=$(cd "$dir" && evasion_added_lines | evasion_hits)
+    if [ -n "$hits" ]; then
+      block "uncommitted changes to the suite add bot-protection evasion ($hits). CLAUDE.md's hard rule: never bypass or evade IMDb's bot protection; a person solves CAPTCHAs. Remove it before committing."
+    fi
+  fi
+
+  # --- On master only ---
+  [ "$branch" = "master" ] || continue
+  # A command that starts by creating another branch isn't acting on master.
+  if printf '%s' "$first" | grep -Eq "^[[:space:]]*git$OPTS[[:space:]]+(checkout|switch)[^;&|]*[[:space:]](-b|-B|-c|-C|--create|--force-create)([[:space:]]|\$)"; then
+    continue
+  fi
+  if is_sub "$part" 'commit|revert|cherry-pick|am|rebase'; then
     block "you are on master. Create a branch first (git checkout -b <name>); master only changes through PRs."
   fi
-  if printf '%s' "$part" | grep -Eq '(^|[[:space:]])git[[:space:]]+((-C|-c|--git-dir|--work-tree)[[:space:]]+[^[:space:]]+[[:space:]]+|-[^[:space:]]*[[:space:]]+)*push([[:space:]]|$)' \
-     && ! printf '%s' "$part" | grep -Eq -- '(--delete|[[:space:]]-d([[:space:]]|$)|[[:space:]]:[^[:space:]]+)'; then
+  if is_sub "$part" 'push' && ! has "$part" '(--delete|[[:space:]]-d([[:space:]]|$)|[[:space:]]:[^[:space:]]+)'; then
     block "you are on master. Push a feature branch and open a PR instead of pushing master."
   fi
-  if printf '%s' "$part" | grep -Eq '(^|[[:space:]])git[[:space:]]+((-C|-c|--git-dir|--work-tree)[[:space:]]+[^[:space:]]+[[:space:]]+|-[^[:space:]]*[[:space:]]+)*merge([[:space:]]|$)' \
-     && ! printf '%s' "$part" | grep -Eq -- '--ff-only'; then
-    block "you are on master. Merge through a PR (gh pr merge --merge); locally only 'git merge --ff-only origin/master' is allowed."
+  if is_sub "$part" 'merge|pull' && ! has "$part" '--ff-only'; then
+    block "you are on master. Merge through a PR (gh pr merge --merge); locally only '--ff-only' updates are allowed."
   fi
-  if printf '%s' "$part" | grep -Eq '(^|[[:space:]])git[[:space:]]+((-C|-c|--git-dir|--work-tree)[[:space:]]+[^[:space:]]+[[:space:]]+|-[^[:space:]]*[[:space:]]+)*reset[[:space:]].*--hard'; then
+  if is_sub "$part" 'reset' && has "$part" '--hard'; then
     block "you are on master. 'git reset --hard' would throw away work; ask the user first."
+  fi
+  if is_sub "$part" 'clean' && has "$part" '[[:space:]](-[[:alpha:]]*f[[:alpha:]]*|--force)([[:space:]]|$)'; then
+    block "you are on master. 'git clean -f' deletes untracked files; ask the user first."
   fi
 done <<< "$parts"
 

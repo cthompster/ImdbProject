@@ -5,7 +5,11 @@
 # Exit 2 reports the problem to Claude so it fixes the file.
 set -u
 
-file=$(jq -r '.tool_input.file_path // empty')
+if ! command -v jq >/dev/null 2>&1; then
+  echo "check-frontmatter hook is disabled: jq was not found." >&2
+  exit 1
+fi
+file=$(jq -r '.tool_input.file_path // empty' 2>/dev/null) || exit 0
 case "$file" in
   */.claude/agents/*.md) kind=agent
     allowed='name description tools disallowedTools model color permissionMode skills mcpServers hooks memory effort isolation background maxTurns initialPrompt' ;;
@@ -15,20 +19,24 @@ case "$file" in
 esac
 [ -f "$file" ] || exit 0
 
+# Ignore Windows line endings when reading.
+content=$(tr -d '\r' < "$file")
 errors=()
-if [ "$(head -n 1 "$file")" != "---" ]; then
+if [ "$(printf '%s\n' "$content" | head -n 1)" != "---" ]; then
   errors+=("line 1 must be '---'")
 else
-  end=$(awk 'NR>1 && /^---[[:space:]]*$/ {print NR; exit}' "$file")
+  end=$(printf '%s\n' "$content" | awk 'NR>1 && /^---[[:space:]]*$/ {print NR; exit}')
   if [ -z "$end" ]; then
     errors+=("no closing '---' line")
+  elif [ "$end" -eq 2 ]; then
+    errors+=("the frontmatter is empty; it needs at least 'name' and 'description'")
   else
     seen=" "
     lineno=1
     while IFS= read -r line; do
       lineno=$((lineno + 1))
       [ -z "${line//[[:space:]]/}" ] && continue
-      case "$line" in [[:space:]]*) continue ;; esac   # indented continuation of a YAML value
+      case "$line" in [[:space:]]*|\#*) continue ;; esac   # indented continuation, or a YAML comment
       if [[ ! "$line" =~ ^([A-Za-z][A-Za-z0-9_-]*):([[:space:]](.*))?$ ]]; then
         errors+=("line $lineno is not 'key: value': $line")
         continue
@@ -40,7 +48,7 @@ else
         *": "*|*" #"*) errors+=("line $lineno: the value of '$key' contains ': ' or ' #', which breaks YAML; quote the whole value") ;;
       esac
       seen="$seen$key "
-    done < <(sed -n "2,$((end - 1))p" "$file")
+    done < <(printf '%s\n' "$content" | sed -n "2,$((end - 1))p")
     for required in name description; do
       case "$seen" in *" $required "*) ;; *) errors+=("missing '$required'") ;; esac
     done

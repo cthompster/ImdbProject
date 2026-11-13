@@ -95,16 +95,33 @@ blocks something, it says why; fix the cause rather than working around the hook
 
 | Hook | When | What it does |
 |---|---|---|
-| `git-guard.sh` | Before Bash | On `master`, blocks `git commit`, `push`, `merge` and `reset --hard`. Still allowed there: `merge --ff-only` and `push --delete`. On any branch, blocks force-adding `chrome-profile` |
-| `bot-protection-guard.sh` | Before Edit/Write | Blocks edits to `hellocucumber/` Java, `pom.xml` or `.properties` files that add bot-protection evasion: stealth flags, user-agent spoofing, `navigator.webdriver` or CAPTCHA solvers |
+| `git-guard.sh` | Before Bash | **Any branch:** blocks pushes to master (`HEAD:master`, `x:master`, `push origin master`) and staging `chrome-profile` (force-adding it, or force-adding broadly such as `add -f .`, `-A` or `hellocucumber`). Also blocks a commit while any of it is staged, or while uncommitted changes to the suite add bot-protection evasion. **On `master`:** blocks `commit`, `revert`, `cherry-pick`, `am`, `rebase`, `merge`, `pull`, `push`, `reset --hard` and `clean -f`. Still allowed there: `merge`/`pull --ff-only`, `push --delete <branch>`/`push origin :<branch>`, and commands that start by creating a branch (`git checkout -b x && git commit …`) |
+| `bot-protection-guard.sh` | Before Edit/Write | Blocks edits to `hellocucumber/` Java, `pom.xml` or `.properties` files that add bot-protection evasion: stealth flags, user-agent spoofing (`user-agent=`, `useragent`), webdriver hiding (`navigator…webdriver`, `dom.webdriver`) or CAPTCHA solvers. The patterns live in `evasion-patterns.txt` (shared with the commit and end-of-turn checks through `lib-evasion.sh`). Comments are ignored |
 | `check-frontmatter.sh` | After Edit/Write | Checks the frontmatter of `.claude/agents/*.md` and `.claude/skills/*/SKILL.md`: only known settings, valid YAML values, `name` and `description` present |
-| `stop-checks.sh` | When Claude stops | If Java changed, runs `mvn -q test-compile` (never `mvn test`). Reminds when a `.feature` file changed without the READMEs or WIKI, or when only one of the two properties files changed. Each set of changes is reported once |
+| `stop-checks.sh` | When Claude stops | If uncommitted changes touch Java or `pom.xml`, runs `mvn -q test-compile` (never `mvn test`). Flags bot-protection evasion in uncommitted changes to the suite, however they were made. Reminds when a `.feature` file changed without the READMEs or WIKI, or when only one of the two properties files changed. The compile result and the reminders are reported once (a failing compile isn't re-run or re-reported until the code changes again); evasion is reported on every turn until it's removed |
 
-Personal hooks in `.claude/settings.local.json` (git-ignored):
-- **SessionStart:** loads `.claude/hooks/env.local.sh` (git-ignored: `JAVA_HOME` and the Maven/gh `PATH`), so `mvn` and `gh` work without exports.
-- **Notification:** `notify.sh` shows a macOS banner when Claude is waiting.
+**Limits:**
+- `git-guard.sh` checks the whole command text, so a heredoc that only *mentions* a blocked command is blocked too. Put such text in a file (for example `gh pr create --body-file`).
+- Evasion added through Bash or an IDE isn't stopped when it's written, only when Claude commits or ends its turn. A live `mvn test` started in the same turn as such an edit would run before either check.
+- All hooks need `jq`. Without it they show a "hook is disabled" warning and allow the action.
 
-To set these up on another machine, create `.claude/hooks/env.local.sh` with your own paths. Review or disable hooks with `/hooks`.
+**Personal hooks** live in `.claude/settings.local.json` (git-ignored). The scripts they run are committed, except `env.local.sh`:
+- **SessionStart:** appends `.claude/hooks/env.local.sh` (git-ignored: `JAVA_HOME` and the Maven/gh `PATH`) to `$CLAUDE_ENV_FILE`, so `mvn` and `gh` work without exports. `stop-checks.sh` also loads that file.
+- **Notification:** runs the committed `notify.sh`, which shows a macOS banner when Claude is waiting.
+
+**To set these up on another machine:**
+1. Create `.claude/hooks/env.local.sh` with your own `export JAVA_HOME=…` and `export PATH=…:$PATH` lines.
+2. Add the hooks to `.claude/settings.local.json`:
+   ```json
+   {
+     "hooks": {
+       "SessionStart": [{ "hooks": [{ "type": "command", "command": "f=\"$CLAUDE_PROJECT_DIR/.claude/hooks/env.local.sh\"; [ -f \"$f\" ] && [ -n \"$CLAUDE_ENV_FILE\" ] && cat \"$f\" >> \"$CLAUDE_ENV_FILE\"; exit 0" }] }],
+       "Notification": [{ "hooks": [{ "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/notify.sh" }] }]
+     }
+   }
+   ```
+
+Review or disable hooks with `/hooks`.
 
 ## Git workflow
 

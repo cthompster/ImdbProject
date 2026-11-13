@@ -49,15 +49,20 @@ evasion_pattern() {
 # a comment. Knows string literals ("..." and '...', with backslash escapes, plus multi-line Java text
 # blocks """...""" and JavaScript `...` template literals), so comment markers inside a string
 # ("http://...", "**/*.java", '//', a text block containing /*) are not comments. Nothing inside a string
-# is ever removed, so misreading where a string ends can only leave extra text to check.
-# Known gap: a JavaScript regex literal containing /* (e.g. /[/*]/) is read as opening a comment.
+# is ever removed, but a misread string boundary is not always harmless: if the scan believes it is in
+# code while the compiler is inside a string, an unclosed /* in that string opens a comment here and
+# hides the lines after it. Known ways this happens (all need an unclosed /* inside a string with
+# evasion after it):
+# - an Edit or diff hunk that starts in the middle of a text block or template literal;
+# - a backtick inside a string within ${...} of a template literal;
+# - a JavaScript regex literal containing /* (e.g. /[/*]/).
 # Block comments (/* */, <!-- -->) are followed across lines the way the compiler reads them: a line is
 # inside one only if an earlier opening marker is still open, so Javadoc is skipped while a code line
 # that starts with "* " (a line broken before a multiplication) is checked. A line equal to
 # $EVASION_RESET resets that state; diff scans emit it at every hunk, so an unclosed marker in one part
 # of a file can't hide lines from another. Text that starts in the middle of an existing block comment
-# (an Edit of a Javadoc line without its /** line) is checked as code: a harmless extra block, never a
-# missed one.
+# (an Edit of a Javadoc line without its /** line) is checked as code: a harmless extra block. (Text that
+# starts in the middle of a string is the risky case described above.)
 EVASION_RESET='@@EVASION_RESET@@'
 evasion_strip_comments() {
   local type="${1:-plain}"
@@ -94,7 +99,9 @@ evasion_strip_comments() {
         if (type == "js" && c == "`") { tl = 1; out = out c; continue }
         if ((c == "\"" || c == "\x27") && type != "plain") { q = c; out = out c; continue }
         if (cl && c == "/" && nx == "*") { blk = 1; i++; continue }
-        if (cl && c == "/" && nx == "/" && prev ~ /[[:space:]]/) break
+        # In Java and JSON any // starts a comment (foo();// x). Only JS needs whitespace before it, to
+        # tell a comment from a regex literal such as /a\/\//.
+        if (cl && c == "/" && nx == "/" && (type == "c" || prev ~ /[[:space:]]/)) break
         if (type == "xml" && substr(line, i, 4) == "<!--") { xml = 1; i += 3; continue }
         if (type == "hash" && c == "#" && prev ~ /[[:space:]]/) break
         out = out c

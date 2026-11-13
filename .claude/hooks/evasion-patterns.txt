@@ -1,0 +1,36 @@
+# Bot-protection evasion patterns (extended regular expressions, matched case-insensitively).
+# One alternative per line; blank lines and lines starting with # are ignored.
+# Used by bot-protection-guard.sh (edits), git-guard.sh (commits) and stop-checks.sh (end of turn).
+# CLAUDE.md hard rule: never bypass or evade IMDb's bot protection. A person solves CAPTCHAs.
+
+# Chrome automation flags that hide the browser being automated
+AutomationControlled
+excludeSwitches
+enable-automation
+useAutomationExtension
+
+# Hiding navigator.webdriver
+navigator[^;]{0,40}webdriver
+defineProperty[^;]{0,60}webdriver
+dom\.webdriver
+webdriver\.enabled
+
+# User-agent spoofing (Chrome switch with or without --, Firefox pref, CDP override)
+user-agent=
+useragent\.override
+setUserAgent
+UserAgentOverride
+
+# Stealth libraries
+undetected[-_]?chrome
+selenium-stealth
+puppeteer-extra
+stealth[-_]?plugin
+
+# CAPTCHA-solving services and libraries
+2captcha
+anti-?captcha
+capsolver
+capmonster
+deathbycaptcha
+captcha[-_ ]?solver

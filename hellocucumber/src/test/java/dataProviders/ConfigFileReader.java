@@ -118,6 +118,30 @@ public class ConfigFileReader {
         return required("titleId");
     }
 
+    /** Absolute path of the folder that keeps a numbered report of every run (see reporting.RunHistoryReport). */
+    public Path getHistoryDir() {
+        String dir = get("historyDir");
+        return Path.of(dir == null ? "test-history" : dir).toAbsolutePath();
+    }
+
+    /** How many numbered reports of full and filtered runs to keep; 0 keeps all. */
+    public int getHistoryKeep() {
+        return getCount("historyKeep", 50);
+    }
+
+    /** How many numbered dry-run reports to keep, counted separately from the other runs; 0 keeps all. */
+    public int getHistoryKeepDryRuns() {
+        return getCount("historyKeepDryRuns", 10);
+    }
+
+    private int getCount(String key, int defaultValue) {
+        long value = getLong(key, defaultValue);
+        if (value < 0 || value > Integer.MAX_VALUE) {
+            throw new IllegalStateException("'" + key + "' must be 0 (keep all) or a positive number but was: " + value);
+        }
+        return (int) value;
+    }
+
     /** Absolute path of the Chrome profile directory, or {@code null} to use a throwaway profile. */
     public Path getChromeProfileDir() {
         String dir = get("chromeProfileDir");

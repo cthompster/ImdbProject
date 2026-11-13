@@ -19,9 +19,16 @@ All Maven commands run from `hellocucumber/`:
 | `mvn -q test-compile` | Compile only (`-Xlint:all -Werror`, so warnings fail the build). |
 | `mvn -q test -Dcucumber.execution.dry-run=true` | No browser: checks every step is defined. |
 
-- Report: `hellocucumber/target/cucumber-reports/imdb.html`. Every run, including dry and filtered
-  runs, **overwrites** it; do a full run to get a complete report. Failure screenshots are embedded in
-  it as base64 PNGs.
+- Report: `hellocucumber/target/cucumber-reports/imdb.html` always holds the **latest** run (dry and
+  filtered runs included), so do a full run to get a complete report. Failure screenshots are embedded
+  in it as base64 PNGs.
+- Run history: every `RunImdbTests` run (Maven, or IntelliJ running `RunImdbTests`; not a right-click
+  run of one `.feature` file) is also saved as `hellocucumber/test-history/run-NNNN_<date>_<time>.html`
+  (`_filtered`/`_dry-run` added for partial runs) and listed in `hellocucumber/test-history/index.html`
+  with scenario counts (`@manual` and filtered-out scenarios aren't counted). Written by the
+  `reporting.RunHistoryReport` plugin; the newest 50 full/filtered runs and, separately, the newest 10
+  dry runs are kept (`historyDir`, `historyKeep`, `historyKeepDryRuns` in `configuration.properties`). The folder is git-ignored and survives
+  `mvn clean`.
 - Expected result today: 25 IMDb scenarios pass, 5 `@manual` skipped, 8 tutorial scenarios pass
   (Maven's final line: `Tests run: 38, Failures: 0, Errors: 0, Skipped: 5`).
 - Any key in `src/test/resources/configuration.properties` can be overridden with `-D`

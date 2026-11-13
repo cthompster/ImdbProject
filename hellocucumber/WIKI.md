@@ -82,7 +82,7 @@ Common options:
 
 In IntelliJ, run `imdbTests/RunImdbTests`, or right-click a `.feature` file and choose *Run*.
 
-The report is written to `target/cucumber-reports/imdb.html`. Failed scenarios include a screenshot and the page URL.
+The report is written to `target/cucumber-reports/imdb.html` (the latest run). Failed scenarios include a screenshot and the page URL. Every run of `RunImdbTests` (Maven or IntelliJ, not a right-click run of one `.feature` file) is also kept as a numbered report in `test-history/`, listed in `test-history/index.html` with its scenario counts; the newest 50 full and filtered runs and, separately, the newest 10 dry runs are kept.
 
 ## Current status
 

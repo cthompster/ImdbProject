@@ -54,6 +54,7 @@ Rules that keep the layers clean:
 | | `PageObjectManager` | Lazily creates page objects; `getPage(PageName)` maps feature-file names to them. |
 | | `FileReaderManager` | Singleton that reads `configuration.properties` once. |
 | `dataProviders` | `ConfigFileReader` | Typed getters; each key's `-D` system property overrides the file. |
+| `reporting` | `RunHistoryReport` | Cucumber plugin: saves a numbered copy of each run's HTML report in `test-history/` (written with Cucumber's public `html-formatter` library), keeps the newest `historyKeep` full/filtered and, separately, the newest `historyKeepDryRuns` dry-run reports, and rebuilds `test-history/index.html`. Registered in `RunImdbTests` only. |
 | `enums` | `PageName`, `DriverType`, `EnvironmentType`, `SortOrder` | Allowed values, with clear errors for unknown ones. |
 | `hellocucumber` | `IsItFriday`, `Stepdefs`, `RunCucumberTest` | The tutorial. |
 
@@ -63,7 +64,8 @@ Rules that keep the layers clean:
 mvn test
  └─ Surefire 3 ─► JUnit Platform
      ├─ RunImdbTests   (@Suite, engine "cucumber", glue imdbTests,
-     │                  plugins: pretty + html:target/cucumber-reports/imdb.html)
+     │                  plugins: pretty + html:target/cucumber-reports/imdb.html
+     │                           + reporting.RunHistoryReport → test-history/run-NNNN_….html)
      │   reads junit-platform.properties  → cucumber.filter.tags=not @manual
      │
      │   for each scenario:
@@ -108,10 +110,11 @@ All dependencies are `test` scope.
 | Dependency | Version | Used for |
 |---|---|---|
 | `org.seleniumhq.selenium:selenium-java` | 4.52.0 | WebDriver, waits, `Actions`, CDP (cookie reset). Built-in **Selenium Manager** downloads the matching browser driver, so no chromedriver install or path is needed. |
-| `io.cucumber:cucumber-bom` (import) | 7.34.9 | Pins the versions of the three Cucumber artifacts below |
+| `io.cucumber:cucumber-bom` (import) | 7.34.9 | Pins the versions of the Cucumber artifacts below |
 | `cucumber-java` | (BOM) | `@Given/@When/@Then`, `@After`, `Scenario` |
 | `cucumber-picocontainer` | (BOM) | Constructor injection of `TestContext`, one per scenario |
 | `cucumber-junit-platform-engine` | (BOM) | Runs features on the JUnit Platform |
+| `cucumber-plugin`, `html-formatter`, `messages`, `messages-ndjson` | (BOM) | Used directly by `reporting.RunHistoryReport`: the plugin API and Cucumber's public HTML report library. They come with Cucumber anyway; declaring them keeps that use visible |
 | `org.junit:junit-bom` (import) | 5.14.4 | Pins the versions of the JUnit artifacts below |
 | `junit-platform-suite` | (BOM) | `@Suite` runners |
 | `junit-jupiter-api` | (BOM) | `Assertions` in step definitions |
@@ -131,7 +134,7 @@ To upgrade, change the three version properties at the top of the pom, then comp
 
 | File | Read by | Contents |
 |---|---|---|
-| `configuration.properties` | `ConfigFileReader` | `environment=local`, `browser=chrome`, `headless=false`, `windowMaximize=true`, `explicitWait=15`, `url=https://www.imdb.com`, `titleId=tt0111161`, `captchaWaitSeconds=180`, `chromeProfileDir=chrome-profile`. Any key can be overridden with `-D`. |
+| `configuration.properties` | `ConfigFileReader` | `environment=local`, `browser=chrome`, `headless=false`, `windowMaximize=true`, `explicitWait=15`, `url=https://www.imdb.com`, `titleId=tt0111161`, `captchaWaitSeconds=180`, `chromeProfileDir=chrome-profile`, `historyDir=test-history`, `historyKeep=50`, `historyKeepDryRuns=10`. Any key can be overridden with `-D`. |
 | `junit-platform.properties` | Maven / `@Suite` runners | `cucumber.filter.tags=not @manual`, `cucumber.publish.quiet=true` |
 | `cucumber.properties` | IntelliJ right-click Run | the same two keys |
 
@@ -144,7 +147,8 @@ To upgrade, change the three version properties at the top of the pom, then comp
 | Path | What | In git? |
 |---|---|---|
 | `hellocucumber/chrome-profile/` | Chrome profile holding the `aws-waf-token` CAPTCHA pass | No (`.gitignore`, must stay ignored) |
-| `hellocucumber/target/cucumber-reports/imdb.html` | IMDb report, overwritten every run; failure screenshots embedded | No |
+| `hellocucumber/target/cucumber-reports/imdb.html` | IMDb report of the latest run; failure screenshots embedded | No |
+| `hellocucumber/test-history/` | A numbered copy of every `RunImdbTests` run's report (newest 50 full/filtered and newest 10 dry runs kept), `index.html` listing them with scenario counts, and `runs.tsv` behind it. Survives `mvn clean` | No (`.gitignore`) |
 | `hellocucumber/target/cucumber-reports/hellocucumber.html` | Tutorial report | No |
 | `hellocucumber/javaDoc/` | Published class documentation | Yes |
 | `hellocucumber/WIKI.md`, `README.md` files | Scenario tables, status, how to run | Yes |

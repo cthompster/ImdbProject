@@ -4,3 +4,6 @@ hellocucumber/chrome-profile/
 # IntelliJ: per-user state, and libraries regenerated from pom.xml
 hellocucumber/.idea/workspace.xml
 hellocucumber/.idea/libraries/
+# Claude Code: personal settings and machine-specific toolchain paths
+.claude/settings.local.json
+.claude/hooks/*.local.sh

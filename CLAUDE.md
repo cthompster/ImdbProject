@@ -88,6 +88,24 @@ Project skills in `.claude/skills/`:
   `references/deep-dive-guide.md` explains the key mechanisms and how to debug them; update them when
   those change.
 
+## Hooks
+
+Shared hooks in `.claude/settings.json` (scripts in `.claude/hooks/`) enforce the rules above. When a hook
+blocks something, it says why; fix the cause rather than working around the hook.
+
+| Hook | When | What it does |
+|---|---|---|
+| `git-guard.sh` | Before Bash | On `master`, blocks `git commit`, `push`, `merge` and `reset --hard`. Still allowed there: `merge --ff-only` and `push --delete`. On any branch, blocks force-adding `chrome-profile` |
+| `bot-protection-guard.sh` | Before Edit/Write | Blocks edits to `hellocucumber/` Java, `pom.xml` or `.properties` files that add bot-protection evasion: stealth flags, user-agent spoofing, `navigator.webdriver` or CAPTCHA solvers |
+| `check-frontmatter.sh` | After Edit/Write | Checks the frontmatter of `.claude/agents/*.md` and `.claude/skills/*/SKILL.md`: only known settings, valid YAML values, `name` and `description` present |
+| `stop-checks.sh` | When Claude stops | If Java changed, runs `mvn -q test-compile` (never `mvn test`). Reminds when a `.feature` file changed without the READMEs or WIKI, or when only one of the two properties files changed. Each set of changes is reported once |
+
+Personal hooks in `.claude/settings.local.json` (git-ignored):
+- **SessionStart:** loads `.claude/hooks/env.local.sh` (git-ignored: `JAVA_HOME` and the Maven/gh `PATH`), so `mvn` and `gh` work without exports.
+- **Notification:** `notify.sh` shows a macOS banner when Claude is waiting.
+
+To set these up on another machine, create `.claude/hooks/env.local.sh` with your own paths. Review or disable hooks with `/hooks`.
+
 ## Git workflow
 
 The user works one change at a time and asks for each step:

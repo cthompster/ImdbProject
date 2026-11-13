@@ -41,16 +41,19 @@ build_changed=$(printf '%s\n' "$changed" | grep -E '^hellocucumber/(src/.*\.java
 if [ -n "$build_changed" ]; then
   code_hash=$( { printf '%s\n' "$build_changed"; printf '%s\n' "$build_changed" | while IFS= read -r f; do [ -f "$f" ] && cat "$f"; done; } | shasum | cut -c1-40)
   if [ "$(cat "$state.checked" 2>/dev/null)" != "$code_hash" ]; then
-    printf '%s' "$code_hash" > "$state.checked"   # this state is checked and reported once, pass or fail
     # Personal toolchain paths (JAVA_HOME, PATH) live in a git-ignored file; see CLAUDE.md "Hooks".
     [ -f "$dir/.claude/hooks/env.local.sh" ] && . "$dir/.claude/hooks/env.local.sh"
     if command -v mvn >/dev/null 2>&1; then
-      if ! out=$(cd hellocucumber && mvn -q test-compile 2>&1); then
+      out=$(cd hellocucumber && mvn -q test-compile 2>&1); rc=$?
+      # Recorded only once mvn has finished, so a run killed by the hook timeout is retried next time.
+      printf '%s' "$code_hash" > "$state.checked"   # this state is reported once, pass or fail
+      if [ "$rc" -ne 0 ]; then
         details=$(printf '%s\n' "$out" | grep -E 'ERROR|WARNING|error:|warning:' | head -20)
         [ -n "$details" ] || details=$(printf '%s\n' "$out" | tail -20)
         messages+=("The code changed and 'mvn -q test-compile' fails (warnings are errors here). Fix it before finishing; this is reported once until the code changes again:"$'\n'"$details")
       fi
     else
+      printf '%s' "$code_hash" > "$state.checked"
       messages+=("The code changed but mvn isn't on PATH, so the compile check was skipped. Run 'mvn -q test-compile' in hellocucumber/ before committing.")
     fi
   fi
@@ -59,7 +62,12 @@ fi
 # 2. Bot-protection evasion in uncommitted changes, however they were made (Edit, Bash, IDE). Unlike the
 #    other checks this is reported on every turn until it is removed: it breaks a hard rule.
 . "$HOOKS_DIR/lib-evasion.sh"
-evasion=$(evasion_added_lines | evasion_hits)
+if ! evasion_ready; then
+  messages+=(".claude/hooks/evasion-patterns.txt is missing or empty, so uncommitted changes weren't checked for bot-protection evasion.")
+  evasion=""
+else
+  evasion=$(evasion_added_lines | evasion_hits)
+fi
 if [ -n "$evasion" ]; then
   messages+=("Uncommitted changes to the suite add bot-protection evasion ($evasion). CLAUDE.md's hard rule: never bypass or evade IMDb's bot protection; a person solves CAPTCHAs. Remove it, and don't run the suite with it.")
 fi

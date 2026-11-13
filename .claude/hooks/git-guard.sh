@@ -11,7 +11,7 @@
 # - no commit, revert, cherry-pick, am, rebase, merge, pull, push, `reset --hard` or `clean -f`;
 # - allowed: `merge --ff-only` / `pull --ff-only` (updating master after a PR merge),
 #   `push --delete <branch>` / `push origin :<branch>` (deleting a merged branch), and any command
-#   that starts by creating a new branch (`git checkout -b x && git commit ...`).
+#   `&&` chain that starts by creating a new branch and doesn't switch back (`git checkout -b x && git commit`).
 # Limitation: the whole command text is checked, so text that only mentions a blocked command (for
 # example in a heredoc) can be blocked too. Put such text in a file instead.
 set -u
@@ -43,8 +43,23 @@ branch=$(git -C "$dir" symbolic-ref --short -q HEAD 2>/dev/null)
 
 # Check each part of a compound command separately.
 parts=$(printf '%s' "$cmd" | awk '{ gsub(/&&|\|\||;/, "\n"); print }')
-# The first part that runs git (an earlier `cd` doesn't count).
-first=$(printf '%s\n' "$parts" | grep -E "$G" | sed -n '1p')
+# The first part that runs git (an earlier `cd`, even into ~/git/..., doesn't count).
+first=$(printf '%s\n' "$parts" | grep -E "$G([[:space:]]|\$)" | sed -n '1p')
+
+# Exemption on master: a command that starts by creating a new branch isn't acting on master. Only for
+# `&&` chains (with `;` or `||` the next part runs even if creating the branch failed), and not if a later
+# part switches to another branch, such as back to master.
+CREATE="(checkout|switch)[^;&|]*[[:space:]](-b|-B|-c|-C|--create|--force-create)([[:space:]]|\$)"
+new_branch_first=0
+if printf '%s' "$first" | grep -Eq "^[[:space:]]*git$OPTS[[:space:]]+$CREATE" \
+   && ! printf '%s' "$cmd" | grep -Eq ';|\|\|'; then
+  new_branch_first=1
+  while IFS= read -r later; do
+    if is_sub "$later" 'checkout|switch' && ! printf '%s' "$later" | grep -Eq "$CREATE"; then
+      new_branch_first=0
+    fi
+  done <<< "$(printf '%s\n' "$parts" | awk -v f="$first" 'seen { print } $0 == f { seen = 1 }')"
+fi
 
 while IFS= read -r part; do
   # --- Any branch ---
@@ -59,9 +74,13 @@ while IFS= read -r part; do
     block "files from hellocucumber/chrome-profile/ are staged. Unstage them (git restore --staged hellocucumber/chrome-profile) before committing."
   fi
   # Bot-protection evasion in any uncommitted change to the suite, however it was made (Edit, Bash, IDE).
-  # Checks all uncommitted changes, not just staged ones, because `git add -A && git commit` stages in the
-  # same command.
+  # Checks the working tree, the index and new files, because `git add -A && git commit` stages in the
+  # same command, and staged content can differ from the file on disk.
   if is_sub "$part" 'commit'; then
+    if ! evasion_ready; then
+      echo "git-guard: .claude/hooks/evasion-patterns.txt is missing or empty, so this commit wasn't checked for bot-protection evasion." >&2
+      exit 1
+    fi
     hits=$(cd "$dir" && evasion_added_lines | evasion_hits)
     if [ -n "$hits" ]; then
       block "uncommitted changes to the suite add bot-protection evasion ($hits). CLAUDE.md's hard rule: never bypass or evade IMDb's bot protection; a person solves CAPTCHAs. Remove it before committing."
@@ -70,10 +89,7 @@ while IFS= read -r part; do
 
   # --- On master only ---
   [ "$branch" = "master" ] || continue
-  # A command that starts by creating another branch isn't acting on master.
-  if printf '%s' "$first" | grep -Eq "^[[:space:]]*git$OPTS[[:space:]]+(checkout|switch)[^;&|]*[[:space:]](-b|-B|-c|-C|--create|--force-create)([[:space:]]|\$)"; then
-    continue
-  fi
+  [ "$new_branch_first" = 1 ] && continue
   if is_sub "$part" 'commit|revert|cherry-pick|am|rebase'; then
     block "you are on master. Create a branch first (git checkout -b <name>); master only changes through PRs."
   fi

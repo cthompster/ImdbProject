@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # PreToolUse (Edit|Write|MultiEdit): enforce CLAUDE.md's hard rule that the suite never bypasses or evades
-# IMDb's bot protection. Blocks edits to the suite's Java, pom.xml or .properties files that add a pattern
-# from evasion-patterns.txt (stealth flags, user-agent spoofing, webdriver hiding, CAPTCHA solvers).
+# IMDb's bot protection. Blocks edits to the suite's code, build, config and helper files (listed in
+# lib-evasion.sh) that add a pattern from evasion-patterns.txt (stealth flags, user-agent spoofing, webdriver hiding, CAPTCHA solvers).
 # Comments are ignored, so code may still explain the rule. Changes made through Bash are caught later,
 # when Claude commits (git-guard.sh) or ends its turn (stop-checks.sh).
 # Exit 2 blocks the edit and shows the reason to Claude.
@@ -16,10 +16,11 @@ fi
 input=$(cat)
 file=$(printf '%s' "$input" | jq -r '.tool_input.file_path // empty' 2>/dev/null) \
   || { echo "bot-protection-guard hook: could not read its input." >&2; exit 1; }
-case "$file" in
-  */hellocucumber/*.java|*/hellocucumber/pom.xml|*/hellocucumber/*.properties) ;;
-  *) exit 0 ;;
-esac
+evasion_is_suite_file "$file" || exit 0
+if ! evasion_ready; then
+  echo "bot-protection-guard hook is disabled: .claude/hooks/evasion-patterns.txt is missing or empty." >&2
+  exit 1
+fi
 
 # The text being added: Write content, Edit new_string, or every MultiEdit new_string.
 hits=$(printf '%s' "$input" \

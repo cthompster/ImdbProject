@@ -22,7 +22,7 @@ esac
 # Ignore Windows line endings when reading.
 content=$(tr -d '\r' < "$file")
 errors=()
-if [ "$(printf '%s\n' "$content" | head -n 1)" != "---" ]; then
+if ! printf '%s\n' "$content" | head -n 1 | grep -qE '^---[[:space:]]*$'; then
   errors+=("line 1 must be '---'")
 else
   end=$(printf '%s\n' "$content" | awk 'NR>1 && /^---[[:space:]]*$/ {print NR; exit}')
@@ -46,6 +46,7 @@ else
       case "$value" in
         \"*|\'*) ;;
         *": "*|*" #"*) errors+=("line $lineno: the value of '$key' contains ': ' or ' #', which breaks YAML; quote the whole value") ;;
+        \`*|@*|%*|\&*|\**|\!*) errors+=("line $lineno: the value of '$key' starts with a YAML indicator character (\` @ % & * !); quote the whole value") ;;
       esac
       seen="$seen$key "
     done < <(printf '%s\n' "$content" | sed -n "2,$((end - 1))p")

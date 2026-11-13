@@ -17,7 +17,7 @@ webdriver\.enabled
 
 # User-agent spoofing (Chrome switch with or without --, Firefox pref, CDP override)
 user-agent=
-useragent
+useragent\.override
 setUserAgent
 UserAgentOverride
 

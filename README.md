@@ -103,5 +103,5 @@ runs are kept and, counted separately, the newest 10 dry runs; change this with 
 
 ## More information
 - [`hellocucumber/README.md`](hellocucumber/README.md): detailed setup, configuration and the project's key files
-- [`hellocucumber/WIKI.md`](hellocucumber/WIKI.md): how the suite works (also as [`WIKI.mediawiki`](hellocucumber/WIKI.mediawiki))
+- [`hellocucumber/WIKI.md`](hellocucumber/WIKI.md): how the suite works
 - `hellocucumber/javaDoc/index.html`: class documentation

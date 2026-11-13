@@ -48,6 +48,11 @@ else
         *": "*|*" #"*) errors+=("line $lineno: the value of '$key' contains ': ' or ' #', which breaks YAML; quote the whole value") ;;
         \`*|@*|%*|\&*|\**|\!*) errors+=("line $lineno: the value of '$key' starts with a YAML indicator character (\` @ % & * !); quote the whole value") ;;
       esac
+      # A list or map where text is expected ("[WIP] ...", "{...}", "- ..."). Flow lists are fine elsewhere,
+      # e.g. "tools: [Read, Grep]".
+      case "$key" in name|description)
+        case "$value" in \[*|\{*|"- "*) errors+=("line $lineno: the value of '$key' starts with '[', '{' or '- ', which YAML reads as a list or map; quote the whole value") ;; esac ;;
+      esac
       seen="$seen$key "
     done < <(printf '%s\n' "$content" | sed -n "2,$((end - 1))p")
     for required in name description; do

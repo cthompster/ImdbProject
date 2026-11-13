@@ -20,6 +20,18 @@ evasion_is_suite_file() {   # absolute or relative path
   return 1
 }
 
+# The comment syntax of a file: c (// and /* */: Java, JavaScript, JSON), xml (<!-- -->), hash (# after
+# whitespace: Python, shell), properties (# or ! at the start of a line), plain (no comments).
+evasion_file_type() {
+  case "$1" in
+    *.java|*.js|*.json) echo c ;;
+    *.xml) echo xml ;;
+    *.py|*.sh) echo hash ;;
+    *.properties) echo properties ;;
+    *) echo plain ;;
+  esac
+}
+
 # True when the patterns file exists and has at least one pattern. Without it the checks would match
 # nothing and silently allow everything, so callers warn instead.
 evasion_ready() {
@@ -31,43 +43,76 @@ evasion_pattern() {
   grep -vE '^[[:space:]]*(#|$)' "$EVASION_PATTERNS_FILE" | paste -sd'|' -
 }
 
-# Removes comments from stdin, so code and docs can explain the rule, while keeping any code on the same
-# line: closed /* ... */ and <!-- ... --> comments are cut out; a line that opens a comment it doesn't
-# close, a Javadoc line ("* text" or a bare "*") and a "# ..." line are dropped; a // comment is cut from
-# the line unless the // is inside a string literal ("http://..." is never treated as a comment).
+# Removes the comments of file type $1 from stdin and keeps all code, including code on the same line as
+# a comment. Works line by line and knows string literals ("..." and '...', with backslash escapes), so
+# comment markers inside a string ("http://...", "**/*.java", '//') are not comments.
+# Block comments (/* */, <!-- -->) are followed across lines the way the compiler reads them: a line is
+# inside one only if an earlier opening marker is still open, so Javadoc is skipped while a code line
+# that starts with "* " (a line broken before a multiplication) is checked. A line equal to
+# $EVASION_RESET resets that state; diff scans emit it at every hunk, so an unclosed marker in one part
+# of a file can't hide lines from another. Text that starts in the middle of an existing block comment
+# (an Edit of a Javadoc line without its /** line) is checked as code: a harmless extra block, never a
+# missed one.
+EVASION_RESET='@@EVASION_RESET@@'
 evasion_strip_comments() {
-  sed -E -e 's#/\*([^*]|\*+[^*/])*\*+/##g' -e 's#<!--([^-]|-[^-])*-->##g' \
-         -e 's#^[[:space:]]*/\*.*$##' -e 's#^[[:space:]]*\*([[:space:]].*)?$##' -e 's#^[[:space:]]*\#.*$##' \
-  | awk '{
-      line = $0; n = length(line); inq = 0
+  local type="${1:-plain}"
+  awk -v type="$type" -v reset="$EVASION_RESET" '
+    BEGIN { blk = 0; xml = 0 }
+    $0 == reset { blk = 0; xml = 0; print ""; next }
+    type == "properties" && /^[[:space:]]*[#!]/ { print ""; next }
+    {
+      line = $0; n = length(line); out = ""; q = ""
       for (i = 1; i <= n; i++) {
-        c = substr(line, i, 1)
-        if (c == "\\") { i++; continue }
-        if (c == "\"") { inq = !inq; continue }
-        if (!inq && c == "/" && substr(line, i + 1, 1) == "/" && (i == 1 || substr(line, i - 1, 1) ~ /[[:space:]]/)) {
-          line = substr(line, 1, i - 1); break
+        c = substr(line, i, 1); nx = substr(line, i + 1, 1)
+        prev = (i == 1) ? " " : substr(line, i - 1, 1)
+        if (q != "") {                              # inside a string literal
+          out = out c
+          if (c == "\\") { out = out nx; i++ }
+          else if (c == q) q = ""
+          continue
         }
+        if (blk) { if (c == "*" && nx == "/") { blk = 0; i++ } ; continue }
+        if (xml) { if (substr(line, i, 3) == "-->") { xml = 0; i += 2 } ; continue }
+        if ((c == "\"" || c == "\x27") && type != "plain") { q = c; out = out c; continue }
+        if (type == "c" && c == "/" && nx == "*") { blk = 1; i++; continue }
+        if (type == "c" && c == "/" && nx == "/" && prev ~ /[[:space:]]/) break
+        if (type == "xml" && substr(line, i, 4) == "<!--") { xml = 1; i += 3; continue }
+        if (type == "hash" && c == "#" && prev ~ /[[:space:]]/) break
+        out = out c
       }
-      print line
+      print out
     }'
 }
 
-# Prints the evasion patterns found in stdin (comments ignored), comma-separated; nothing if none.
+# Prints the evasion patterns found in stdin (comments of file type $1 ignored), comma-separated.
 evasion_hits() {
-  evasion_strip_comments | grep -oiE "$(evasion_pattern)" | sort -u | paste -sd, -
+  evasion_strip_comments "${1:-plain}" | grep -oiE "$(evasion_pattern)" | sort -u | paste -sd, -
 }
 
-# Prints the lines that uncommitted changes add to the suite files of the repository in the current
-# directory: added lines in the working tree and in the index (staged content can differ from the file
-# on disk), plus the whole content of new untracked files.
-evasion_added_lines() {
-  local opts=(-U0 --no-color --src-prefix=a/ --dst-prefix=b/)
+# Prints the evasion patterns that uncommitted changes add to the suite files of the repository in the
+# current directory, comma-separated. Looks at the lines added in the working tree and in the index (staged
+# content can differ from the file on disk) and at the whole content of new untracked files, each file with
+# its own comment syntax.
+evasion_changed_hits() {
+  local opts=(-U0 --no-color --no-ext-diff --no-textconv --src-prefix=a/ --dst-prefix=b/)
+  local has_head=0 untracked f
+  git rev-parse -q --verify HEAD >/dev/null 2>&1 && has_head=1
+  untracked=$(git ls-files --others --exclude-standard -- "${EVASION_PATHSPECS[@]}" 2>/dev/null)
   {
-    if git rev-parse -q --verify HEAD >/dev/null 2>&1; then
-      git diff HEAD "${opts[@]}" -- "${EVASION_PATHSPECS[@]}"
-    fi
-    git diff --cached "${opts[@]}" -- "${EVASION_PATHSPECS[@]}"
-  } 2>/dev/null | grep -E '^\+' | grep -vE '^\+\+\+ (b/|/dev/null)' | cut -c2-
-  git ls-files -z --others --exclude-standard -- "${EVASION_PATHSPECS[@]}" 2>/dev/null \
-    | while IFS= read -r -d '' f; do [ -f "$f" ] && cat "$f"; done
+    [ "$has_head" = 1 ] && git diff -z --name-only HEAD -- "${EVASION_PATHSPECS[@]}"
+    git diff -z --name-only --cached -- "${EVASION_PATHSPECS[@]}"
+    git ls-files -z --others --exclude-standard -- "${EVASION_PATHSPECS[@]}"
+  } 2>/dev/null | tr '\0' '\n' | sed '/^$/d' | sort -u | while IFS= read -r f; do
+    if printf '%s\n' "$untracked" | grep -qxF -- "$f"; then
+      [ -f "$f" ] && cat "$f"
+    else
+      {
+        [ "$has_head" = 1 ] && git diff HEAD "${opts[@]}" -- "$f"
+        git diff --cached "${opts[@]}" -- "$f"
+      } 2>/dev/null | awk -v reset="$EVASION_RESET" '
+          /^@@/ { print reset; next }                   # a new hunk: block-comment state starts over
+          /^\+\+\+ (b\/|\/dev\/null)/ { next }          # file header, not content
+          /^\+/ { print substr($0, 2) }'
+    fi | evasion_hits "$(evasion_file_type "$f")"
+  done | tr ',' '\n' | sed '/^$/d' | sort -u | paste -sd, -
 }

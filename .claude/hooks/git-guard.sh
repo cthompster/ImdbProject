@@ -10,8 +10,8 @@
 # On master:
 # - no commit, revert, cherry-pick, am, rebase, merge, pull, push, `reset --hard` or `clean -f`;
 # - allowed: `merge --ff-only` / `pull --ff-only` (updating master after a PR merge),
-#   `push --delete <branch>` / `push origin :<branch>` (deleting a merged branch), and any command
-#   `&&` chain that starts by creating a new branch and doesn't switch back (`git checkout -b x && git commit`).
+#   `push --delete <branch>` / `push origin :<branch>` (deleting a merged branch), and an `&&` chain
+#   that starts by creating a new branch and doesn't switch back (`git checkout -b x && git commit`).
 # Limitation: the whole command text is checked, so text that only mentions a blocked command (for
 # example in a heredoc) can be blocked too. Put such text in a file instead.
 set -u
@@ -47,18 +47,20 @@ parts=$(printf '%s' "$cmd" | awk '{ gsub(/&&|\|\||;/, "\n"); print }')
 first=$(printf '%s\n' "$parts" | grep -E "$G([[:space:]]|\$)" | sed -n '1p')
 
 # Exemption on master: a command that starts by creating a new branch isn't acting on master. Only for
-# `&&` chains (with `;` or `||` the next part runs even if creating the branch failed), and not if a later
-# part switches to another branch, such as back to master.
+# pure `&&` chains (after `;`, `||`, a newline or a background `&`, the next part runs even if creating the
+# branch failed; `2>&1`-style redirections are fine), and not if a later part switches to another branch,
+# such as back to master.
 CREATE="(checkout|switch)[^;&|]*[[:space:]](-b|-B|-c|-C|--create|--force-create)([[:space:]]|\$)"
 new_branch_first=0
 if printf '%s' "$first" | grep -Eq "^[[:space:]]*git$OPTS[[:space:]]+$CREATE" \
-   && ! printf '%s' "$cmd" | grep -Eq ';|\|\|'; then
+   && ! printf '%s' "$cmd" | grep -Eq ';|\|\||(^|[^&>])&([^&>0-9]|$)' \
+   && case "$cmd" in *$'\n'*) false ;; *) true ;; esac; then
   new_branch_first=1
   while IFS= read -r later; do
     if is_sub "$later" 'checkout|switch' && ! printf '%s' "$later" | grep -Eq "$CREATE"; then
       new_branch_first=0
     fi
-  done <<< "$(printf '%s\n' "$parts" | awk -v f="$first" 'seen { print } $0 == f { seen = 1 }')"
+  done <<< "$(printf '%s\n' "$parts" | f="$first" awk 'seen { print } $0 == ENVIRON["f"] { seen = 1 }')"
 fi
 
 while IFS= read -r part; do
@@ -81,7 +83,7 @@ while IFS= read -r part; do
       echo "git-guard: .claude/hooks/evasion-patterns.txt is missing or empty, so this commit wasn't checked for bot-protection evasion." >&2
       exit 1
     fi
-    hits=$(cd "$dir" && evasion_added_lines | evasion_hits)
+    hits=$(cd "$dir" && evasion_changed_hits)
     if [ -n "$hits" ]; then
       block "uncommitted changes to the suite add bot-protection evasion ($hits). CLAUDE.md's hard rule: never bypass or evade IMDb's bot protection; a person solves CAPTCHAs. Remove it before committing."
     fi

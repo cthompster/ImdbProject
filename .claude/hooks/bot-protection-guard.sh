@@ -25,7 +25,7 @@ fi
 # The text being added: Write content, Edit new_string, or every MultiEdit new_string.
 hits=$(printf '%s' "$input" \
   | jq -r '[.tool_input.content, .tool_input.new_string, (.tool_input.edits // [] | .[].new_string)] | map(select(. != null)) | join("\n")' \
-  | evasion_hits)
+  | evasion_hits "$(evasion_file_type "$file")")
 
 if [ -n "$hits" ]; then
   echo "Blocked by .claude/hooks/bot-protection-guard.sh: this edit to ${file##*/hellocucumber/} adds bot-protection evasion ($hits)." >&2

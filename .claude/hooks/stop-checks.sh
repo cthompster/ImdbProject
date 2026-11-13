@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # Stop: checks before Claude ends its turn.
-# 1. Compile check: if uncommitted changes touch Java under hellocucumber/src or hellocucumber/pom.xml,
+# 1. Evasion check: uncommitted changes to the suite must not add bot-protection evasion
+#    (evasion-patterns.txt), including changes made through Bash that bot-protection-guard.sh never saw.
+#    Runs first, so a compile cut off by the hook timeout can't skip it.
+# 2. Compile check: if uncommitted changes touch Java under hellocucumber/src or hellocucumber/pom.xml,
 #    run `mvn -q test-compile` (-Xlint:all -Werror). Never runs `mvn test`: that opens a browser against
 #    live IMDb and can trigger CAPTCHAs.
-# 2. Evasion check: uncommitted changes to the suite must not add bot-protection evasion
-#    (evasion-patterns.txt), including changes made through Bash that bot-protection-guard.sh never saw.
 # 3. Keep-in-step reminder: a changed .feature file needs the READMEs/WIKI updated, and
 #    junit-platform.properties and cucumber.properties must change together.
 # The compile result and the reminders are reported once per state: a compile failure is not re-run or
@@ -29,14 +30,27 @@ dir="${CLAUDE_PROJECT_DIR:-.}"
 cd "$dir" || exit 0
 git rev-parse --git-dir >/dev/null 2>&1 || exit 0
 
-# Uncommitted changes (tracked and untracked), one unquoted path per line.
-changed=$( { git diff -z --name-only HEAD 2>/dev/null; git ls-files -z --others --exclude-standard; } | tr '\0' '\n' | sort -u | sed '/^$/d')
+# Uncommitted changes (working tree, index and untracked files), one unquoted path per line.
+changed=$( { git diff -z --name-only HEAD 2>/dev/null; git diff -z --name-only --cached 2>/dev/null
+             git ls-files -z --others --exclude-standard; } | tr '\0' '\n' | sed '/^$/d' | sort -u)
 [ -z "$changed" ] && exit 0
 
 state="${TMPDIR:-/tmp}/claude-imdb-stop-$session"
 messages=()
 
-# 1. Compile check.
+# 1. Bot-protection evasion in uncommitted changes, however they were made (Edit, Bash, IDE). Unlike the
+#    other checks this is reported on every turn until it is removed: it breaks a hard rule.
+. "$HOOKS_DIR/lib-evasion.sh"
+if ! evasion_ready; then
+  messages+=(".claude/hooks/evasion-patterns.txt is missing or empty, so uncommitted changes weren't checked for bot-protection evasion.")
+else
+  evasion=$(evasion_changed_hits)
+  if [ -n "$evasion" ]; then
+    messages+=("Uncommitted changes to the suite add bot-protection evasion ($evasion). CLAUDE.md's hard rule: never bypass or evade IMDb's bot protection; a person solves CAPTCHAs. Remove it (also from the staged copy), and don't run the suite with it.")
+  fi
+fi
+
+# 2. Compile check.
 build_changed=$(printf '%s\n' "$changed" | grep -E '^hellocucumber/(src/.*\.java|pom\.xml)$' || true)
 if [ -n "$build_changed" ]; then
   code_hash=$( { printf '%s\n' "$build_changed"; printf '%s\n' "$build_changed" | while IFS= read -r f; do [ -f "$f" ] && cat "$f"; done; } | shasum | cut -c1-40)
@@ -57,19 +71,6 @@ if [ -n "$build_changed" ]; then
       messages+=("The code changed but mvn isn't on PATH, so the compile check was skipped. Run 'mvn -q test-compile' in hellocucumber/ before committing.")
     fi
   fi
-fi
-
-# 2. Bot-protection evasion in uncommitted changes, however they were made (Edit, Bash, IDE). Unlike the
-#    other checks this is reported on every turn until it is removed: it breaks a hard rule.
-. "$HOOKS_DIR/lib-evasion.sh"
-if ! evasion_ready; then
-  messages+=(".claude/hooks/evasion-patterns.txt is missing or empty, so uncommitted changes weren't checked for bot-protection evasion.")
-  evasion=""
-else
-  evasion=$(evasion_added_lines | evasion_hits)
-fi
-if [ -n "$evasion" ]; then
-  messages+=("Uncommitted changes to the suite add bot-protection evasion ($evasion). CLAUDE.md's hard rule: never bypass or evade IMDb's bot protection; a person solves CAPTCHAs. Remove it, and don't run the suite with it.")
 fi
 
 # 3. Keep-in-step reminder, once per distinct set of changed files.

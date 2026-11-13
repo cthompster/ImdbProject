@@ -47,13 +47,13 @@ parts=$(printf '%s' "$cmd" | awk '{ gsub(/&&|\|\||;/, "\n"); print }')
 first=$(printf '%s\n' "$parts" | grep -E "$G([[:space:]]|\$)" | sed -n '1p')
 
 # Exemption on master: a command that starts by creating a new branch isn't acting on master. Only for
-# pure `&&` chains (after `;`, `||`, a newline or a background `&`, the next part runs even if creating the
-# branch failed; `2>&1`-style redirections are fine), and not if a later part switches to another branch,
-# such as back to master.
+# pure `&&` chains (after `;`, `||`, a newline or a background `&` the next part runs even if creating the
+# branch failed, and after a pipe `&&` tests the last command of the pipe; `2>&1`-style redirections are
+# fine), and not if a later part switches to another branch, such as back to master.
 CREATE="(checkout|switch)[^;&|]*[[:space:]](-b|-B|-c|-C|--create|--force-create)([[:space:]]|\$)"
 new_branch_first=0
 if printf '%s' "$first" | grep -Eq "^[[:space:]]*git$OPTS[[:space:]]+$CREATE" \
-   && ! printf '%s' "$cmd" | grep -Eq ';|\|\||(^|[^&>])&([^&>0-9]|$)' \
+   && ! printf '%s' "$cmd" | grep -Eq '[;|]|(^|[^&>])&([^&>0-9]|$)' \
    && case "$cmd" in *$'\n'*) false ;; *) true ;; esac; then
   new_branch_first=1
   while IFS= read -r later; do

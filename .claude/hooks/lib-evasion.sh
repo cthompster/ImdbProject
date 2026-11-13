@@ -20,11 +20,13 @@ evasion_is_suite_file() {   # absolute or relative path
   return 1
 }
 
-# The comment syntax of a file: c (// and /* */: Java, JavaScript, JSON), xml (<!-- -->), hash (# after
-# whitespace: Python, shell), properties (# or ! at the start of a line), plain (no comments).
+# The comment syntax of a file: c (// and /* */: Java, JSON), js (like c, plus `...` template literals),
+# xml (<!-- -->), hash (# after whitespace: Python, shell), properties (# or ! at the start of a line),
+# plain (no comments).
 evasion_file_type() {
   case "$1" in
-    *.java|*.js|*.json) echo c ;;
+    *.java|*.json) echo c ;;
+    *.js) echo js ;;
     *.xml) echo xml ;;
     *.py|*.sh) echo hash ;;
     *.properties) echo properties ;;
@@ -44,8 +46,11 @@ evasion_pattern() {
 }
 
 # Removes the comments of file type $1 from stdin and keeps all code, including code on the same line as
-# a comment. Works line by line and knows string literals ("..." and '...', with backslash escapes), so
-# comment markers inside a string ("http://...", "**/*.java", '//') are not comments.
+# a comment. Knows string literals ("..." and '...', with backslash escapes, plus multi-line Java text
+# blocks """...""" and JavaScript `...` template literals), so comment markers inside a string
+# ("http://...", "**/*.java", '//', a text block containing /*) are not comments. Nothing inside a string
+# is ever removed, so misreading where a string ends can only leave extra text to check.
+# Known gap: a JavaScript regex literal containing /* (e.g. /[/*]/) is read as opening a comment.
 # Block comments (/* */, <!-- -->) are followed across lines the way the compiler reads them: a line is
 # inside one only if an earlier opening marker is still open, so Javadoc is skipped while a code line
 # that starts with "* " (a line broken before a multiplication) is checked. A line equal to
@@ -57,14 +62,26 @@ EVASION_RESET='@@EVASION_RESET@@'
 evasion_strip_comments() {
   local type="${1:-plain}"
   awk -v type="$type" -v reset="$EVASION_RESET" '
-    BEGIN { blk = 0; xml = 0 }
-    $0 == reset { blk = 0; xml = 0; print ""; next }
+    BEGIN { blk = 0; xml = 0; tb = 0; tl = 0; cl = (type == "c" || type == "js") }
+    $0 == reset { blk = 0; xml = 0; tb = 0; tl = 0; print ""; next }
     type == "properties" && /^[[:space:]]*[#!]/ { print ""; next }
     {
       line = $0; n = length(line); out = ""; q = ""
       for (i = 1; i <= n; i++) {
         c = substr(line, i, 1); nx = substr(line, i + 1, 1)
         prev = (i == 1) ? " " : substr(line, i - 1, 1)
+        if (tb) {                                   # inside a Java text block """..."""
+          out = out c
+          if (c == "\\") { out = out nx; i++ }
+          else if (substr(line, i, 3) == "\"\"\"") { out = out "\"\""; i += 2; tb = 0 }
+          continue
+        }
+        if (tl) {                                   # inside a JavaScript template literal
+          out = out c
+          if (c == "\\") { out = out nx; i++ }
+          else if (c == "`") tl = 0
+          continue
+        }
         if (q != "") {                              # inside a string literal
           out = out c
           if (c == "\\") { out = out nx; i++ }
@@ -73,9 +90,11 @@ evasion_strip_comments() {
         }
         if (blk) { if (c == "*" && nx == "/") { blk = 0; i++ } ; continue }
         if (xml) { if (substr(line, i, 3) == "-->") { xml = 0; i += 2 } ; continue }
+        if (cl && substr(line, i, 3) == "\"\"\"") { tb = 1; out = out "\"\"\""; i += 2; continue }
+        if (type == "js" && c == "`") { tl = 1; out = out c; continue }
         if ((c == "\"" || c == "\x27") && type != "plain") { q = c; out = out c; continue }
-        if (type == "c" && c == "/" && nx == "*") { blk = 1; i++; continue }
-        if (type == "c" && c == "/" && nx == "/" && prev ~ /[[:space:]]/) break
+        if (cl && c == "/" && nx == "*") { blk = 1; i++; continue }
+        if (cl && c == "/" && nx == "/" && prev ~ /[[:space:]]/) break
         if (type == "xml" && substr(line, i, 4) == "<!--") { xml = 1; i += 3; continue }
         if (type == "hash" && c == "#" && prev ~ /[[:space:]]/) break
         out = out c
@@ -94,10 +113,11 @@ evasion_hits() {
 # content can differ from the file on disk) and at the whole content of new untracked files, each file with
 # its own comment syntax.
 evasion_changed_hits() {
-  local opts=(-U0 --no-color --no-ext-diff --no-textconv --src-prefix=a/ --dst-prefix=b/)
+  local opts=(-U0 --inter-hunk-context=0 --no-color --no-ext-diff --no-textconv --src-prefix=a/ --dst-prefix=b/)
   local has_head=0 untracked f
   git rev-parse -q --verify HEAD >/dev/null 2>&1 && has_head=1
-  untracked=$(git ls-files --others --exclude-standard -- "${EVASION_PATHSPECS[@]}" 2>/dev/null)
+  # -z so names come out unquoted, the same as in the list below.
+  untracked=$(git ls-files -z --others --exclude-standard -- "${EVASION_PATHSPECS[@]}" 2>/dev/null | tr '\0' '\n')
   {
     [ "$has_head" = 1 ] && git diff -z --name-only HEAD -- "${EVASION_PATHSPECS[@]}"
     git diff -z --name-only --cached -- "${EVASION_PATHSPECS[@]}"

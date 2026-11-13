@@ -2,7 +2,8 @@
 # Stop: checks before Claude ends its turn.
 # 1. Evasion check: uncommitted changes to the suite must not add bot-protection evasion
 #    (evasion-patterns.txt), including changes made through Bash that bot-protection-guard.sh never saw.
-#    Runs first, so a compile cut off by the hook timeout can't skip it.
+#    Runs first and reports at once (skipping the compile), so a compile cut off by the hook timeout
+#    can't hide it.
 # 2. Compile check: if uncommitted changes touch Java under hellocucumber/src or hellocucumber/pom.xml,
 #    run `mvn -q test-compile` (-Xlint:all -Werror). Never runs `mvn test`: that opens a browser against
 #    live IMDb and can trigger CAPTCHAs.
@@ -46,7 +47,11 @@ if ! evasion_ready; then
 else
   evasion=$(evasion_changed_hits)
   if [ -n "$evasion" ]; then
-    messages+=("Uncommitted changes to the suite add bot-protection evasion ($evasion). CLAUDE.md's hard rule: never bypass or evade IMDb's bot protection; a person solves CAPTCHAs. Remove it (also from the staged copy), and don't run the suite with it.")
+    # Reported at once, before the compile: if mvn ran into the hook timeout, nothing after it would be
+    # shown. The compile can wait; the code has to change anyway.
+    echo "Checks from .claude/hooks/stop-checks.sh:" >&2
+    echo "- Uncommitted changes to the suite add bot-protection evasion ($evasion). CLAUDE.md's hard rule: never bypass or evade IMDb's bot protection; a person solves CAPTCHAs. Remove it (also from the staged copy), and don't run the suite with it." >&2
+    exit 2
   fi
 fi
 

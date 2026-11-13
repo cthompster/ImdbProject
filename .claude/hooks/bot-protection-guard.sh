@@ -23,8 +23,10 @@ if ! evasion_ready; then
 fi
 
 # The text being added: Write content, Edit new_string, or every MultiEdit new_string.
+# Each MultiEdit edit is a separate place in the file, so the comment state is reset between them: an
+# unclosed /* in one edit must not hide the next.
 hits=$(printf '%s' "$input" \
-  | jq -r '[.tool_input.content, .tool_input.new_string, (.tool_input.edits // [] | .[].new_string)] | map(select(. != null)) | join("\n")' \
+  | jq -r --arg r "$EVASION_RESET" '[.tool_input.content, .tool_input.new_string, (.tool_input.edits // [] | .[].new_string)] | map(select(. != null)) | join("\n" + $r + "\n")' \
   | evasion_hits "$(evasion_file_type "$file")")
 
 if [ -n "$hits" ]; then
